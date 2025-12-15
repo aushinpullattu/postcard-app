@@ -64,19 +64,35 @@ def create_postcard_super_clear(to_name, from_name, message):
     draw = ImageDraw.Draw(base)
     padding = 60
 
-    # Border
+    # ---------------- Border ----------------
     draw.rectangle(
         [0, 0, width - 1, height - 1],
         outline=(139, 94, 60),
         width=12
     )
 
-    # ---------------- Teddy Image (proportional resize) ----------------
+    # ---------------- Letter Image (TOP CENTER) ----------------
+    letter_img = load_image("letter-pic.png")
+    max_letter_width = 180
+    letter_ratio = max_letter_width / letter_img.width
+    letter_img = letter_img.resize(
+        (int(letter_img.width * letter_ratio), int(letter_img.height * letter_ratio)),
+        Image.LANCZOS
+    )
+
+    letter_x = width // 2 - letter_img.width // 2
+    letter_y = padding - 10
+    base.paste(letter_img, (letter_x, letter_y), letter_img)
+
+    # ---------------- Teddy Image (LEFT, BIG, CLEAR) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_size = 420
-    ratio = min(max_size / teddy_img.width, max_size / teddy_img.height)
+    max_teddy_size = 420
+    teddy_ratio = min(
+        max_teddy_size / teddy_img.width,
+        max_teddy_size / teddy_img.height
+    )
     teddy_img = teddy_img.resize(
-        (int(teddy_img.width * ratio), int(teddy_img.height * ratio)),
+        (int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)),
         Image.LANCZOS
     )
 
@@ -84,22 +100,21 @@ def create_postcard_super_clear(to_name, from_name, message):
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # Fonts
+    # ---------------- Fonts ----------------
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
 
-    # Format text
+    # ---------------- Format user text ----------------
     to_name = format_text(to_name)
     from_name = format_text(from_name)
     message = format_text(message)
 
     # ---------------- Right column ----------------
     right_x = int(width * 0.55)
-    start_y = int(height * 0.28)
+    start_y = int(height * 0.30)
     line_gap = 80
 
-    # To
     draw.text(
         (right_x, start_y),
         f"To:  {to_name}",
@@ -107,7 +122,6 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_big
     )
 
-    # Message label (extra spacing)
     draw.text(
         (right_x, start_y + line_gap * 1.4),
         "Message:",
@@ -115,7 +129,6 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_big
     )
 
-    # Message text
     wrapped_message = textwrap.fill(message, width=22)
     draw.text(
         (right_x + 10, start_y + line_gap * 2.4),
@@ -124,7 +137,7 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_message
     )
 
-    # From (bottom-left)
+    # ---------------- From (bottom-left) ----------------
     draw.text(
         (padding + 40, height - 120),
         f"From: {from_name}",
