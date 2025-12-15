@@ -110,18 +110,25 @@ def create_postcard(to_name, from_name, message, user_img=None):
     right_x = int(width * 0.55)
     start_y = int(height * 0.25)
     line_gap = 80
+    input_offset = 10  # spacing between label and user input
 
-    # From
-    draw.text((right_x, start_y), "From:", fill=ink_brown, font=font_label)
-    draw.text((right_x + 150, start_y), from_name, fill=ink_brown, font=font_input)
+    # Function to align text baseline
+    def draw_label_and_input(draw_obj, label, input_text, x, y):
+        # Draw label
+        draw_obj.text((x, y), label, fill=ink_brown, font=font_label)
+        # Get label height
+        label_bbox = draw_obj.textbbox((x, y), label, font=font_label)
+        label_height = label_bbox[3] - label_bbox[1]
+        # Align input vertically to label
+        draw_obj.text((x + label_bbox[2]-label_bbox[0] + input_offset, y), input_text, fill=ink_brown, font=font_input)
 
-    # To
-    draw.text((right_x, start_y + line_gap), "To:", fill=ink_brown, font=font_label)
-    draw.text((right_x + 100, start_y + line_gap), to_name, fill=ink_brown, font=font_input)
-
-    # Message label
+    # Draw From
+    draw_label_and_input(draw, "From:", from_name, right_x, start_y)
+    # Draw To
+    draw_label_and_input(draw, "To:", to_name, right_x, start_y + line_gap)
+    # Draw Message label
     draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_label)
-    # Actual message content
+    # Draw actual message content
     wrapped_message = textwrap.fill(message, width=22)
     draw.text((right_x + 20, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_input)
 
