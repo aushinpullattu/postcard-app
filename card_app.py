@@ -51,10 +51,10 @@ def create_postcard_high_res_small_canvas(to_name, from_name, message):
 
     # ---------------- Load Patrick font ----------------
     try:
-        font_to = ImageFont.truetype("Patrick.ttf", 100*scale)
-        font_from = ImageFont.truetype("Patrick.ttf", 100*scale)
-        font_message = ImageFont.truetype("Patrick.ttf", 80*scale)
-        font_stamp = ImageFont.truetype("Patrick.ttf", 50*scale)
+        font_to = ImageFont.truetype("Patrick.ttf", 10*scale)
+        font_from = ImageFont.truetype("Patrick.ttf", 10*scale)
+        font_message = ImageFont.truetype("Patrick.ttf", 8*scale)
+        font_stamp = ImageFont.truetype("Patrick.ttf", 5*scale)
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
