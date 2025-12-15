@@ -39,10 +39,10 @@ def create_fixed_giant_postcard(to_name, from_name, message):
 
     # ---------------- Fixed Super Big Fonts ----------------
     try:
-        font_to = ImageFont.truetype("arial.ttf", 200)       # To
-        font_from = ImageFont.truetype("arial.ttf", 200)     # From
-        font_message = ImageFont.truetype("arial.ttf", 180)  # Message
-        font_stamp = ImageFont.truetype("arial.ttf", 120)    # Stamp
+        font_to = ImageFont.truetype("arial.ttf", 2000)       # To
+        font_from = ImageFont.truetype("arial.ttf", 2000)     # From
+        font_message = ImageFont.truetype("arial.ttf", 1080)  # Message
+        font_stamp = ImageFont.truetype("arial.ttf", 1200)    # Stamp
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
