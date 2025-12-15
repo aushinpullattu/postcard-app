@@ -41,8 +41,8 @@ def create_postcard_high_res_small_canvas(to_name, from_name, message):
     """
     # ---------------- High-res rendering ----------------
     scale = 4  # render 4x bigger internally
-    width, height = 50*scale, 40*scale
-    base = Image.new("RGBA", (width, height), (24, 24, 22))  # beige background
+    width, height = 100*scale, 80*scale
+    base = Image.new("RGBA", (width, height), (240, 240, 220))  # beige background
     draw = ImageDraw.Draw(base)
     padding = 20 * scale
 
