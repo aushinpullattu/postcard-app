@@ -103,8 +103,7 @@ def create_postcard(to_name, from_name, message, user_img=None):
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # Fonts for right-side text
-    font_label = load_font("PatrickHand-Regular.ttf", 60)   # Labels: From, To, Message
-    font_input = load_font("PatrickHand-Regular.ttf", 48)   # User inputs: from_name, to_name, message
+    font_text = load_font("PatrickHand-Regular.ttf", 56)   # Same font size for labels and user inputs
 
     # ---------------- Right side text ----------------
     right_x = int(width * 0.55)
@@ -112,25 +111,21 @@ def create_postcard(to_name, from_name, message, user_img=None):
     line_gap = 80
     input_offset = 10  # spacing between label and user input
 
-    # Function to align text baseline
-    def draw_label_and_input(draw_obj, label, input_text, x, y):
-        # Draw label
-        draw_obj.text((x, y), label, fill=ink_brown, font=font_label)
-        # Get label height
-        label_bbox = draw_obj.textbbox((x, y), label, font=font_label)
-        label_height = label_bbox[3] - label_bbox[1]
-        # Align input vertically to label
-        draw_obj.text((x + label_bbox[2]-label_bbox[0] + input_offset, y), input_text, fill=ink_brown, font=font_input)
+    # Function to draw label and input horizontally aligned
+    def draw_label_input(draw_obj, label, input_text, x, y):
+        draw_obj.text((x, y), label, fill=ink_brown, font=font_text)
+        label_bbox = draw_obj.textbbox((x, y), label, font=font_text)
+        draw_obj.text((x + label_bbox[2]-label_bbox[0] + input_offset, y), input_text, fill=ink_brown, font=font_text)
 
-    # Draw From
-    draw_label_and_input(draw, "From:", from_name, right_x, start_y)
-    # Draw To
-    draw_label_and_input(draw, "To:", to_name, right_x, start_y + line_gap)
-    # Draw Message label
-    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_label)
-    # Draw actual message content
+    # From
+    draw_label_input(draw, "From:", from_name, right_x, start_y)
+    # To
+    draw_label_input(draw, "To:", to_name, right_x, start_y + line_gap)
+    # Message label
+    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_text)
+    # Message content
     wrapped_message = textwrap.fill(message, width=22)
-    draw.text((right_x + 20, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_input)
+    draw.text((right_x + 20, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_text)
 
     # ---------------- User photo (bottom-left) ----------------
     if user_img is not None:
