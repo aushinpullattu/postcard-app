@@ -75,7 +75,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
 
     # ---------------- Teddy Image (top-left, bigger) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_teddy_size = 400  # increased size
+    max_teddy_size = 400  # bigger
     teddy_ratio = min(max_teddy_size / teddy_img.width, max_teddy_size / teddy_img.height)
     teddy_img = teddy_img.resize((int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)), Image.LANCZOS)
     teddy_x = padding
@@ -97,17 +97,17 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     wrapped_message = textwrap.fill(message, width=22)
     draw.text((right_x + 10, start_y + line_gap * 2.4), wrapped_message, fill=ink_brown, font=font_message)
 
-    # ---------------- From text (center-left vertically) ----------------
+    # ---------------- From text (slightly below center-left) ----------------
     bbox_from = draw.textbbox((0, 0), f"From: {from_name}", font=font_medium)
     from_text_height = bbox_from[3] - bbox_from[1]
     from_x = padding
-    from_y = height // 2 - from_text_height // 2
+    from_y = height // 2 + 60  # slightly below center
     draw.text((from_x, from_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
 
     # ---------------- User camera image (bottom-left) ----------------
     if user_img is not None:
         # Resize image bigger
-        max_size = 300  # increased size
+        max_size = 300
         ratio = min(max_size / user_img.width, max_size / user_img.height)
         user_img = user_img.resize((int(user_img.width * ratio), int(user_img.height * ratio)), Image.LANCZOS)
         img_width, img_height = user_img.size
