@@ -70,7 +70,6 @@ def create_postcard_super_clear(to_name, from_name, message):
     top_text = "Postcard for you!"
     bbox = draw.textbbox((0, 0), top_text, font=font_top)
     text_width = bbox[2] - bbox[0]
-    text_height = bbox[3] - bbox[1]
     top_x = width // 2 - text_width // 2
     top_y = 20  # near top
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
@@ -90,7 +89,7 @@ def create_postcard_super_clear(to_name, from_name, message):
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # ---------------- Fonts ----------------
+    # ---------------- Fonts for postcard text ----------------
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
