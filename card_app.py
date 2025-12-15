@@ -10,21 +10,24 @@ import os
 # ---------------- Page config ----------------
 st.set_page_config(
     page_title="Send a Postcard 💌",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-color: #F5F0E1;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# ---------------- Hide Streamlit UI ----------------
+st.markdown("""
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+.stApp {
+    background-color: #F5F0E1;
+}
+</style>
+""", unsafe_allow_html=True)
 
 st.title("📮 Send a Postcard")
+
 
 # ---------------- Inputs ----------------
 to_name = st.text_input("To")
