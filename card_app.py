@@ -7,8 +7,8 @@ import os
 # ----------------------------
 # Paths
 # ----------------------------
-# Robust font path relative to this script
-FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "PatrickHand-Regular.ttf")
+# Font is now in repo root
+FONT_PATH = os.path.join(os.path.dirname(__file__), "PatrickHand-Regular.ttf")
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "postcard_template.png")
 
 # Debug: confirm font exists
@@ -55,7 +55,7 @@ def generate_postcard(to_name, from_name, message):
 # ----------------------------
 # Streamlit UI
 # ----------------------------
-st.title("💌 Postcard Generator")
+st.title("💌 Custom Postcard Generator")
 
 # User inputs
 to_name = st.text_input("To")
