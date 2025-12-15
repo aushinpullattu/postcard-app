@@ -85,23 +85,20 @@ def create_postcard(to_name, from_name, message, user_img=None):
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
 
-    # Right side: To and Message
+    # ---------------- Right side text ----------------
     right_x = int(width * 0.55)
-    start_y = int(height * 0.30)
+    start_y = int(height * 0.25)
     line_gap = 80
-    draw.text((right_x, start_y), f"To:  {to_name}", fill=ink_brown, font=font_big)
-    draw.text((right_x, start_y + line_gap*1.4), "Message:", fill=ink_brown, font=font_big)
+
+    # From
+    draw.text((right_x, start_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
+    # To
+    draw.text((right_x, start_y + line_gap), f"To: {to_name}", fill=ink_brown, font=font_big)
+    # Message
     wrapped_message = textwrap.fill(message, width=22)
-    draw.text((right_x + 10, start_y + line_gap*2.4), wrapped_message, fill=ink_brown, font=font_message)
+    draw.text((right_x, start_y + line_gap*2.2), wrapped_message, fill=ink_brown, font=font_message)
 
-    # From text (slightly below center-left)
-    bbox_from = draw.textbbox((0,0), f"From: {from_name}", font=font_medium)
-    from_text_height = bbox_from[3]-bbox_from[1]
-    from_x = padding
-    from_y = height//2 + 60
-    draw.text((from_x, from_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
-
-    # User photo (bottom-left)
+    # ---------------- User photo (bottom-left) ----------------
     if user_img is not None:
         max_size = 300
         ratio = min(max_size/user_img.width, max_size/user_img.height)
