@@ -43,14 +43,18 @@ def load_font(font_name, size):
         raise FileNotFoundError(f"Font file not found: {font_name}")
     return ImageFont.truetype(font_name, size)
 
-def load_image(image_name, size=None):
+def load_image(image_name):
     if not os.path.exists(image_name):
         raise FileNotFoundError(f"Image file not found: {image_name}")
-    img = Image.open(image_name).convert("RGBA")
-    if size:
-        img = img.resize(size, Image.LANCZOS)
-    return img
+    return Image.open(image_name).convert("RGBA")
 
+def format_text(text):
+    text = text.strip()
+    if text.islower():
+        return text.capitalize()
+    return text
+
+# ---------------- Postcard Generator ----------------
 def create_postcard_super_clear(to_name, from_name, message):
     width, height = 1000, 800
     bg_color = (240, 240, 220)
@@ -60,70 +64,77 @@ def create_postcard_super_clear(to_name, from_name, message):
     draw = ImageDraw.Draw(base)
     padding = 60
 
-    # ---------------- Border ----------------
+    # Border
     draw.rectangle(
         [0, 0, width - 1, height - 1],
         outline=(139, 94, 60),
         width=12
     )
 
-    # ---------------- Images ----------------
-    stamp_img = load_image("teddy-stamp.png", size=(160, 160))
-    teddy_img = load_image("teddy-pic.png", size=(420, 420))  # BIG teddy
+    # ---------------- Teddy Image (proportional resize) ----------------
+    teddy_img = load_image("teddy-pic.png")
+    max_size = 420
+    ratio = min(max_size / teddy_img.width, max_size / teddy_img.height)
+    teddy_img = teddy_img.resize(
+        (int(teddy_img.width * ratio), int(teddy_img.height * ratio)),
+        Image.LANCZOS
+    )
 
-    # Stamp (top-right)
-    stamp_x = width - padding - stamp_img.width
-    stamp_y = padding
-    base.paste(stamp_img, (stamp_x, stamp_y), stamp_img)
-
-    # Teddy (left side, centered vertically)
     teddy_x = padding + 20
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # ---------------- Fonts ----------------
+    # Fonts
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
 
-    # ---------------- Right column text ----------------
-    right_x = int(width * 0.55)
-    start_y = int(height * 0.30)
-    line_gap = 70
+    # Format text
+    to_name = format_text(to_name)
+    from_name = format_text(from_name)
+    message = format_text(message)
 
+    # ---------------- Right column ----------------
+    right_x = int(width * 0.55)
+    start_y = int(height * 0.28)
+    line_gap = 80
+
+    # To
     draw.text(
         (right_x, start_y),
-        f"To: {to_name}",
+        f"To:  {to_name}",
         fill=ink_brown,
         font=font_big
     )
 
+    # Message label (extra spacing)
     draw.text(
-        (right_x, start_y + line_gap),
+        (right_x, start_y + line_gap * 1.4),
         "Message:",
         fill=ink_brown,
         font=font_big
     )
 
+    # Message text
     wrapped_message = textwrap.fill(message, width=22)
     draw.text(
-        (right_x + 10, start_y + line_gap * 2),
+        (right_x + 10, start_y + line_gap * 2.4),
         wrapped_message,
         fill=ink_brown,
         font=font_message
     )
 
-    # ---------------- From (bottom-left, under teddy) ----------------
-    from_text = f"From: {from_name}"
+    # From (bottom-left)
     draw.text(
         (padding + 40, height - 120),
-        from_text,
+        f"From: {from_name}",
         fill=ink_brown,
         font=font_medium
     )
 
     return base
 
+# ---------------- Email Sender ----------------
 def send_postcard_email(image_bytes, receiver_email):
     api_key = st.secrets.get("RESEND_API_KEY")
 
@@ -185,4 +196,3 @@ if st.button("📨 Send Postcard"):
 
         except Exception as e:
             st.error(str(e))
-        
