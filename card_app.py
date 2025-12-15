@@ -32,7 +32,7 @@ def create_fixed_super_big_postcard(to_name, from_name, message):
     - Stamp: top-right
     """
     # Canvas
-    width, height = 500, 400
+    width, height = 500, 300
     base = Image.new("RGBA", (width, height), (245, 240, 225))  # beige background
     draw = ImageDraw.Draw(base)
 
