@@ -40,8 +40,8 @@ def create_postcard_high_res_small_canvas(to_name, from_name, message):
     Create postcard with smaller canvas (500x400) but crisp, big text using Patrick font.
     """
     # ---------------- High-res rendering ----------------
-    scale = 400  # render 4x bigger internally
-    width, height = 500*scale, 400*scale
+    scale = 4  # render 4x bigger internally
+    width, height = 50*scale, 40*scale
     base = Image.new("RGBA", (width, height), (245, 240, 225))  # beige background
     draw = ImageDraw.Draw(base)
     padding = 20 * scale
