@@ -202,15 +202,25 @@ if st.button("📨 Send Postcard"):
                 user_img=pil_user_img
             )
 
+            # Show postcard in Streamlit
             st.image(postcard_image)
 
+            # Save postcard to BytesIO for email and download
             img_bytes = io.BytesIO()
             postcard_image.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
+            # ---------------- Send email ----------------
             send_postcard_email(img_bytes, receiver_email)
-
             st.success("Postcard sent successfully 💖")
+
+            # ---------------- Download button ----------------
+            st.download_button(
+                label="💾 Download Postcard",
+                data=img_bytes,
+                file_name="postcard.png",
+                mime="image/png"
+            )
 
         except Exception as e:
             st.error(str(e))
