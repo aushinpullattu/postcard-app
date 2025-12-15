@@ -102,9 +102,9 @@ def create_postcard(to_name, from_name, message, user_img=None):
     teddy_y = top_y + 60
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # Fonts for text (same size for all right side text)
-    font_text = load_font("PatrickHand-Regular.ttf", 56)
-    font_message = load_font("PatrickHand-Regular.ttf", 56)
+    # Fonts for right-side text
+    font_label = load_font("PatrickHand-Regular.ttf", 60)   # Labels: From, To, Message
+    font_input = load_font("PatrickHand-Regular.ttf", 48)   # User inputs: from_name, to_name, message
 
     # ---------------- Right side text ----------------
     right_x = int(width * 0.55)
@@ -112,14 +112,18 @@ def create_postcard(to_name, from_name, message, user_img=None):
     line_gap = 80
 
     # From
-    draw.text((right_x, start_y), f"From: {from_name}", fill=ink_brown, font=font_text)
+    draw.text((right_x, start_y), "From:", fill=ink_brown, font=font_label)
+    draw.text((right_x + 150, start_y), from_name, fill=ink_brown, font=font_input)
+
     # To
-    draw.text((right_x, start_y + line_gap), f"To: {to_name}", fill=ink_brown, font=font_text)
+    draw.text((right_x, start_y + line_gap), "To:", fill=ink_brown, font=font_label)
+    draw.text((right_x + 100, start_y + line_gap), to_name, fill=ink_brown, font=font_input)
+
     # Message label
-    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_text)
+    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_label)
     # Actual message content
     wrapped_message = textwrap.fill(message, width=22)
-    draw.text((right_x + 10, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_message)
+    draw.text((right_x + 20, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_input)
 
     # ---------------- User photo (bottom-left) ----------------
     if user_img is not None:
