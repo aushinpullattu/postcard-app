@@ -51,6 +51,27 @@ def load_image(image_name):
         raise FileNotFoundError(f"Image file not found: {image_name}")
     return Image.open(image_name).convert("RGBA")
 
+# ---------------- Draw cute curly frame with bow ----------------
+def draw_cute_frame(draw, x, y, w, h, color=(92,64,51)):
+    """Draw a curly rectangle with little bows on top corners"""
+    # Draw curly/rounded rectangle
+    radius = 20
+    draw.rounded_rectangle([x, y, x+w, y+h], radius=radius, outline=color, width=6)
+    # Draw simple bows as triangles
+    bow_size = 20
+    # Top-left bow
+    draw.polygon([
+        (x + 10, y - 5),
+        (x + 10 + bow_size, y - 5),
+        (x + 10 + bow_size/2, y - 5 - bow_size)
+    ], fill=color)
+    # Top-right bow
+    draw.polygon([
+        (x + w - 10 - bow_size, y - 5),
+        (x + w - 10, y - 5),
+        (x + w - 10 - bow_size/2, y - 5 - bow_size)
+    ], fill=color)
+
 # ---------------- Postcard Generator ----------------
 def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     width, height = 1000, 800
@@ -77,9 +98,9 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     top_y = 20
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
-    # ---------------- Teddy Image (top-left) ----------------
+    # ---------------- Teddy Image (top-left, bigger) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_teddy_size = 250  # slightly smaller
+    max_teddy_size = 350  # bigger
     teddy_ratio = min(
         max_teddy_size / teddy_img.width,
         max_teddy_size / teddy_img.height
@@ -89,7 +110,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         Image.LANCZOS
     )
     teddy_x = padding
-    teddy_y = top_y + 80  # below top text
+    teddy_y = top_y + 80
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # ---------------- Fonts ----------------
@@ -134,28 +155,16 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
             Image.LANCZOS
         )
 
-        # Frame settings
-        frame_padding = 10
-        frame_color = (92, 64, 51)
         img_width, img_height = user_img.size
 
-        # Position: middle-left, below teddy
+        # Position: below teddy
         user_x = padding
-        user_y = teddy_y + teddy_img.height + 30  # some gap below teddy
+        user_y = teddy_y + teddy_img.height + 30
 
-        # Draw frame
-        draw.rectangle(
-            [
-                user_x - frame_padding,
-                user_y - frame_padding,
-                user_x + img_width + frame_padding,
-                user_y + img_height + frame_padding
-            ],
-            outline=frame_color,
-            width=6
-        )
+        # Draw cute frame with bows
+        draw_cute_frame(draw, user_x, user_y, img_width, img_height)
 
-        # Paste image
+        # Paste image inside frame
         base.paste(user_img, (user_x, user_y), user_img)
 
         # ---------------- From text below user image ----------------
