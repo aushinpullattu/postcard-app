@@ -47,7 +47,6 @@ user_photo = user_photo_camera if user_photo_camera is not None else user_photo_
 # Preview uploaded/taken photo
 if user_photo is not None:
     try:
-        # Make sure the file is not empty
         if user_photo.getbuffer().nbytes > 0:
             pil_user_img = Image.open(user_photo).convert("RGBA")
             st.image(pil_user_img, caption="Your uploaded/taken photo", use_column_width=True)
@@ -103,10 +102,9 @@ def create_postcard(to_name, from_name, message, user_img=None):
     teddy_y = top_y + 60
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # Fonts for text
-    font_big = load_font("PatrickHand-Regular.ttf", 64)
-    font_medium = load_font("PatrickHand-Regular.ttf", 56)
-    font_message = load_font("PatrickHand-Regular.ttf", 52)
+    # Fonts for text (same size for all right side text)
+    font_text = load_font("PatrickHand-Regular.ttf", 56)
+    font_message = load_font("PatrickHand-Regular.ttf", 56)
 
     # ---------------- Right side text ----------------
     right_x = int(width * 0.55)
@@ -114,11 +112,11 @@ def create_postcard(to_name, from_name, message, user_img=None):
     line_gap = 80
 
     # From
-    draw.text((right_x, start_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
+    draw.text((right_x, start_y), f"From: {from_name}", fill=ink_brown, font=font_text)
     # To
-    draw.text((right_x, start_y + line_gap), f"To: {to_name}", fill=ink_brown, font=font_big)
+    draw.text((right_x, start_y + line_gap), f"To: {to_name}", fill=ink_brown, font=font_text)
     # Message label
-    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_big)
+    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_text)
     # Actual message content
     wrapped_message = textwrap.fill(message, width=22)
     draw.text((right_x + 10, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_message)
