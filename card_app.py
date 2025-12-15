@@ -68,16 +68,16 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         width=12
     )
 
-    # ---------------- Top Text: "Postcard for you!" ----------------
+    # ---------------- Top Text ----------------
     font_top = load_font("PatrickHand-Regular.ttf", 72)
     top_text = "Postcard for you!"
     bbox = draw.textbbox((0, 0), top_text, font=font_top)
     text_width = bbox[2] - bbox[0]
     top_x = width // 2 - text_width // 2
-    top_y = 20  # near top
+    top_y = 20
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
-    # ---------------- Teddy Image (LEFT, BIG, CLEAR) ----------------
+    # ---------------- Teddy Image (LEFT) ----------------
     teddy_img = load_image("teddy-pic.png")
     max_teddy_size = 420
     teddy_ratio = min(
@@ -92,20 +92,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
-    # ---------------- Add user camera image if available ----------------
-    if user_img is not None:
-        # Resize to fit top-right corner
-        max_size = 200
-        ratio = min(max_size / user_img.width, max_size / user_img.height)
-        user_img = user_img.resize(
-            (int(user_img.width * ratio), int(user_img.height * ratio)),
-            Image.LANCZOS
-        )
-        user_x = width - user_img.width - padding
-        user_y = top_y + 80  # below top text
-        base.paste(user_img, (user_x, user_y), user_img)
-
-    # ---------------- Fonts for postcard text ----------------
+    # ---------------- Fonts ----------------
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
@@ -137,12 +124,49 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         font=font_message
     )
 
+    # ---------------- From ----------------
+    from_x = padding + 40
+    from_y = height - 120
     draw.text(
-        (padding + 40, height - 120),
+        (from_x, from_y),
         f"From: {from_name}",
         fill=ink_brown,
         font=font_medium
     )
+
+    # ---------------- Add user camera image at bottom-right with brown frame ----------------
+    if user_img is not None:
+        # Resize to fit nicely
+        max_size = 200
+        ratio = min(max_size / user_img.width, max_size / user_img.height)
+        user_img = user_img.resize(
+            (int(user_img.width * ratio), int(user_img.height * ratio)),
+            Image.LANCZOS
+        )
+
+        # Frame settings
+        frame_padding = 10
+        frame_color = (92, 64, 51)  # brown
+        img_width, img_height = user_img.size
+
+        # Position: bottom-right with padding
+        user_x = width - img_width - padding
+        user_y = from_y + 70  # some gap below "From"
+
+        # Draw frame rectangle
+        draw.rectangle(
+            [
+                user_x - frame_padding,
+                user_y - frame_padding,
+                user_x + img_width + frame_padding,
+                user_y + img_height + frame_padding
+            ],
+            outline=frame_color,
+            width=6
+        )
+
+        # Paste image
+        base.paste(user_img, (user_x, user_y), user_img)
 
     return base
 
@@ -190,7 +214,6 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Convert camera input to PIL Image if available
             pil_user_img = None
             if user_photo is not None:
                 pil_user_img = Image.open(user_photo).convert("RGBA")
@@ -202,19 +225,18 @@ if st.button("📨 Send Postcard"):
                 user_img=pil_user_img
             )
 
-            # Show postcard in Streamlit
             st.image(postcard_image)
 
-            # Save postcard to BytesIO for email and download
+            # Save postcard to BytesIO
             img_bytes = io.BytesIO()
             postcard_image.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
-            # ---------------- Send email ----------------
+            # Send email
             send_postcard_email(img_bytes, receiver_email)
             st.success("Postcard sent successfully 💖")
 
-            # ---------------- Download button ----------------
+            # Download button
             st.download_button(
                 label="💾 Download Postcard",
                 data=img_bytes,
