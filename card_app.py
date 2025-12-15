@@ -33,7 +33,30 @@ to_name = st.text_input("To")
 from_name = st.text_input("From")
 message_input = st.text_area("Message", max_chars=500)
 receiver_email = st.text_input("Recipient Email")
-user_photo = st.camera_input("Take a photo to include in your postcard")
+
+# Camera input
+user_photo_camera = st.camera_input("Take a photo to include in your postcard")
+
+# Fallback file uploader
+st.markdown("**Or upload a photo if camera fails:**")
+user_photo_upload = st.file_uploader("Upload a photo", type=["png","jpg","jpeg"])
+
+# Decide which photo to use
+user_photo = user_photo_camera if user_photo_camera is not None else user_photo_upload
+
+# Preview uploaded/taken photo
+if user_photo is not None:
+    try:
+        # Make sure the file is not empty
+        if user_photo.getbuffer().nbytes > 0:
+            pil_user_img = Image.open(user_photo).convert("RGBA")
+            st.image(pil_user_img, caption="Your uploaded/taken photo", use_column_width=True)
+        else:
+            pil_user_img = None
+    except Exception:
+        pil_user_img = None
+else:
+    pil_user_img = None
 
 # ---------------- Helpers ----------------
 def is_valid_email(email):
@@ -137,10 +160,6 @@ def send_postcard_email(image_bytes, receiver_email):
 
 # ---------------- Step 1: Preview postcard ----------------
 if all([to_name, from_name, message_input]):
-    pil_user_img = None
-    if user_photo is not None:
-        pil_user_img = Image.open(user_photo).convert("RGBA")
-
     postcard_image = create_postcard(to_name, from_name, message_input, user_img=pil_user_img)
     st.subheader("📬 Preview your postcard")
     st.image(postcard_image)
