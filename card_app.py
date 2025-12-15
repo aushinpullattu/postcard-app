@@ -1,8 +1,8 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
-import requests
-import re
 import io
+import re
+import requests
 
 # ---------------- Page config ----------------
 st.set_page_config(
@@ -22,53 +22,52 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_postcard_image(to_name, from_name, message):
-    # Open postcard template
-    postcard = Image.open("postcard_template.png").convert("RGB")
+def create_dynamic_postcard(to_name, from_name, message):
+    # Load your uploaded postcard template
+    template_path = "postcard-template.png"
+    postcard = Image.open(template_path).convert("RGBA")
     draw = ImageDraw.Draw(postcard)
 
-    # Optional: Use a custom font
+    # Fonts
     try:
-        font = ImageFont.truetype("arial.ttf", size=30)
-        font_small = ImageFont.truetype("arial.ttf", size=24)
+        font_large = ImageFont.truetype("arial.ttf", 36)
+        font_medium = ImageFont.truetype("arial.ttf", 28)
     except:
-        font = ImageFont.load_default()
-        font_small = ImageFont.load_default()
+        font_large = font_medium = ImageFont.load_default()
 
-    # Define positions
-    to_position = (50, 50)
-    from_position = (50, postcard.height - 100)
-    message_position = (50, 150)
+    # Positions (adjust these based on your template)
+    to_pos = (120, 50)
+    from_pos = (120, postcard.height - 100)
+    message_pos = (50, 150)
+    message_max_width = 400
 
-    # Draw "To"
-    draw.text(to_position, f"To: {to_name}", fill="black", font=font)
+    # Draw To
+    draw.text(to_pos, f"To: {to_name}", fill="black", font=font_large)
 
-    # Split message into multiple lines if too long
-    max_width = postcard.width - 100
+    # Draw From
+    draw.text(from_pos, f"From: {from_name}", fill="black", font=font_large)
+
+    # Draw Message with wrapping
     lines = []
     words = message.split()
     line = ""
     for word in words:
         test_line = f"{line} {word}".strip()
-        bbox = draw.textbbox((0, 0), test_line, font=font_small)
-        w = bbox[2] - bbox[0]  # width of the text
-        if w <= max_width:
+        bbox = draw.textbbox((0,0), test_line, font=font_medium)
+        if bbox[2] <= message_max_width:
             line = test_line
         else:
             lines.append(line)
             line = word
     lines.append(line)
 
-    # Draw message lines
     for i, line in enumerate(lines):
-        draw.text((message_position[0], message_position[1] + i * 30), line, fill="black", font=font_small)
-
-    # Draw "From"
-    draw.text(from_position, f"From: {from_name}", fill="black", font=font)
+        draw.text((message_pos[0], message_pos[1] + i*35), line, fill="black", font=font_medium)
 
     return postcard
 
 def send_postcard_email(image_bytes):
+    """Example placeholder for sending email"""
     url = "https://api.resend.com/emails"
     headers = {
         "Authorization": f"Bearer {st.secrets['RESEND_API_KEY']}",
@@ -86,7 +85,7 @@ def send_postcard_email(image_bytes):
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
         "html": html,
-        # Note: Actual image attachment logic depends on the API
+        # Attachments need proper API support
     }
 
     r = requests.post(url, headers=headers, json=data)
@@ -100,20 +99,20 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Create postcard image with text
-            postcard_image = create_postcard_image(to_name, from_name, message)
+            # Generate postcard dynamically
+            postcard_image = create_dynamic_postcard(to_name, from_name, message)
 
-            # Show postcard in Streamlit
+            # Show postcard preview in Streamlit
             st.image(postcard_image, use_container_width=True)
 
-            # Convert image to bytes for sending via email
+            # Convert to bytes for sending email
             img_bytes = io.BytesIO()
             postcard_image.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
-            # Send email (with image if your API supports attachments)
+            # Send postcard (attach image if API supports)
             send_postcard_email(img_bytes)
 
-            st.success("Postcard sent 💖")
+            st.success("Postcard generated and sent 💖")
         except Exception as e:
             st.error(f"Something went wrong: {e}")
