@@ -36,11 +36,16 @@ def create_dynamic_postcard(to_name, from_name, message):
     except:
         font_large = font_medium = ImageFont.load_default()
 
-    # Positions
+    # ---------------- Positioning ----------------
     to_pos = (120, 50)
     from_pos = (120, postcard.height - 100)
-    message_pos = (to_pos[0], to_pos[1] + 100)
-    message_max_width = postcard.width - 2 * message_pos[0]
+
+    # Message box area (between To and From)
+    message_top = to_pos[1] + 100
+    message_bottom = from_pos[1] - 50
+    message_left = 120
+    message_right = postcard.width - 120
+    message_width = message_right - message_left
 
     # Draw To
     draw.text(to_pos, f"To: {to_name}", fill="black", font=font_large)
@@ -48,24 +53,31 @@ def create_dynamic_postcard(to_name, from_name, message):
     # Draw From
     draw.text(from_pos, f"From: {from_name}", fill="black", font=font_large)
 
-    # Wrap message
+    # ---------------- Wrap Message ----------------
     lines = []
     words = message.split()
     line = ""
     for word in words:
         test_line = f"{line} {word}".strip()
         bbox = draw.textbbox((0,0), test_line, font=font_medium)
-        if bbox[2] <= message_max_width:
+        if bbox[2] <= message_width:
             line = test_line
         else:
             lines.append(line)
             line = word
     lines.append(line)
 
-    # Draw message with spacing
+    # Draw message
+    total_lines = len(lines)
     line_spacing = 40
-    for i, line in enumerate(lines):
-        draw.text((message_pos[0], message_pos[1] + i * line_spacing), line, fill="black", font=font_medium)
+    current_y = message_top
+
+    for line in lines:
+        draw.text((message_left, current_y), line, fill="black", font=font_medium)
+        current_y += line_spacing
+        # Stop drawing if we reach the bottom of message area
+        if current_y + line_spacing > message_bottom:
+            break
 
     return postcard
 
