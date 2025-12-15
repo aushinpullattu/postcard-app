@@ -42,9 +42,11 @@ def load_font(font_name, size):
     return ImageFont.truetype(font_name, size)
 
 def create_postcard_super_clear(to_name, from_name, message):
-    # HIGH RES canvas (2x)
     width, height = 1000, 800
-    base = Image.new("RGB", (width, height), (240, 240, 220))
+    bg_color = (240, 240, 220)
+    ink_brown = (92, 64, 51)
+
+    base = Image.new("RGB", (width, height), bg_color)
     draw = ImageDraw.Draw(base)
     padding = 60
 
@@ -55,9 +57,9 @@ def create_postcard_super_clear(to_name, from_name, message):
         width=12
     )
 
-    # Fonts (BIG + cute)
-    font_to = load_font("PatrickHand-Regular.ttf", 64)
-    font_from = load_font("PatrickHand-Regular.ttf", 58)
+    # Fonts
+    font_big = load_font("PatrickHand-Regular.ttf", 64)
+    font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
     font_stamp = load_font("PatrickHand-Regular.ttf", 42)
 
@@ -65,45 +67,64 @@ def create_postcard_super_clear(to_name, from_name, message):
     draw.text(
         (width - padding - 140, padding),
         "STAMP",
-        fill=(139, 94, 60),
+        fill=ink_brown,
         font=font_stamp
     )
 
-    # To
+    # Right column
+    right_x = int(width * 0.55)
+    start_y = int(height * 0.35)
+    line_gap = 70
+
     draw.text(
-        (width - padding - 480, height // 2 - 40),
+        (right_x, start_y),
         f"To: {to_name}",
-        fill=(0, 0, 0),
-        font=font_to
+        fill=ink_brown,
+        font=font_big
     )
 
-    # From
     draw.text(
-        (padding, height - padding - 80),
-        f"From: {from_name}",
-        fill=(0, 0, 0),
-        font=font_from
+        (right_x, start_y + line_gap),
+        "Message:",
+        fill=ink_brown,
+        font=font_big
     )
 
-    # Message (wrapped)
-    wrapped = textwrap.fill(message, width=24)
+    wrapped_message = textwrap.fill(message, width=22)
     draw.text(
-        (width - padding - 520, height - padding - 280),
-        f"Message:\n{wrapped}",
-        fill=(0, 0, 0),
+        (right_x + 10, start_y + line_gap * 2),
+        wrapped_message,
+        fill=ink_brown,
         font=font_message
+    )
+
+    # From (center-left)
+    from_text = f"From: {from_name}"
+    bbox = draw.textbbox((0, 0), from_text, font=font_medium)
+    text_height = bbox[3] - bbox[1]
+
+    draw.text(
+        (padding, height // 2 - text_height // 2),
+        from_text,
+        fill=ink_brown,
+        font=font_medium
     )
 
     return base
 
-def send_postcard_email(image_bytes):
+def send_postcard_email(image_bytes, receiver_email):
+    api_key = st.secrets.get("RESEND_API_KEY")
+
+    if not api_key:
+        raise ValueError("RESEND_API_KEY not found in Streamlit secrets")
+
     encoded_image = base64.b64encode(image_bytes.getvalue()).decode()
 
     data = {
-        "from": "Postcard <onboarding@yourdomain.com>",
+        "from": "Postcard <onboarding@resend.dev>",  # ✅ allowed sender
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
-        "html": "<p>Here’s your postcard!</p>",
+        "html": "<p>You’ve received a cute postcard 💌</p>",
         "attachments": [
             {
                 "content": encoded_image,
@@ -113,12 +134,18 @@ def send_postcard_email(image_bytes):
     }
 
     headers = {
-        "Authorization": f"Bearer {st.secrets['RESEND_API_KEY']}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
-    r = requests.post("https://api.resend.com/emails", headers=headers, json=data)
-    r.raise_for_status()
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code != 200:
+        raise Exception(f"Resend error {response.status_code}: {response.text}")
 
 # ---------------- Button ----------------
 if st.button("📨 Send Postcard"):
@@ -134,18 +161,16 @@ if st.button("📨 Send Postcard"):
                 message_input
             )
 
-            # IMPORTANT: DO NOT set width here
+            # IMPORTANT: no resizing here
             st.image(postcard_image)
 
             img_bytes = io.BytesIO()
             postcard_image.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
-            send_postcard_email(img_bytes)
+            send_postcard_email(img_bytes, receiver_email)
 
-            st.success("Postcard generated and sent 💖")
+            st.success("Postcard sent successfully 💖")
 
-        except FileNotFoundError as e:
-            st.error(str(e))
         except Exception as e:
-            st.error(f"Something went wrong: {e}")
+            st.error(str(e))
