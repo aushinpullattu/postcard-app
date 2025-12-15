@@ -71,7 +71,7 @@ def create_postcard_super_clear(to_name, from_name, message):
         width=12
     )
 
-    # ---------------- Letter Image (TOP CENTER) ----------------
+        # ---------------- Letter Image (TOP CENTER) ----------------
     letter_img = load_image("letter-pic.png")
     max_letter_width = 180
     letter_ratio = max_letter_width / letter_img.width
@@ -79,10 +79,11 @@ def create_postcard_super_clear(to_name, from_name, message):
         (int(letter_img.width * letter_ratio), int(letter_img.height * letter_ratio)),
         Image.LANCZOS
     )
-
+    
     letter_x = width // 2 - letter_img.width // 2
-    letter_y = padding - 10
+    letter_y = padding - 50  # moved a little higher
     base.paste(letter_img, (letter_x, letter_y), letter_img)
+
 
     # ---------------- Teddy Image (LEFT, BIG, CLEAR) ----------------
     teddy_img = load_image("teddy-pic.png")
