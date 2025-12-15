@@ -25,26 +25,21 @@ def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 def create_new_postcard(to_name, from_name, message):
-    """
-    Generate a completely new postcard with dynamic user inputs.
-    Text sizes and positions are proportional to canvas.
-    """
-    # Canvas
     width, height = 1200, 800
-    base = Image.new("RGBA", (width, height), (255, 248, 230))  # cream background
+    base = Image.new("RGBA", (width, height), (255, 248, 230))
     draw = ImageDraw.Draw(base)
 
-    # Fonts
+    # Huge fonts
     try:
-        font_large = ImageFont.truetype("arial.ttf", 100)  # To/From
-        font_medium = ImageFont.truetype("arial.ttf", 70)  # Message
-        font_small = ImageFont.truetype("arial.ttf", 50)   # Stamp
+        font_large = ImageFont.truetype("arial.ttf", 2000)  # To/From
+        font_medium = ImageFont.truetype("arial.ttf", 1200)  # Message
+        font_small = ImageFont.truetype("arial.ttf", 800)    # Stamp
     except:
         font_large = font_medium = font_small = ImageFont.load_default()
 
     padding = int(width * 0.04)
 
-    # ---------------- To ----------------
+    # To: top-right
     to_text = f"To: {to_name}"
     to_bbox = draw.textbbox((0,0), to_text, font=font_large)
     to_width = to_bbox[2] - to_bbox[0]
@@ -52,46 +47,43 @@ def create_new_postcard(to_name, from_name, message):
     to_pos = (width - padding - to_width, padding)
     draw.text(to_pos, to_text, fill=(0,0,0), font=font_large)
 
-    # ---------------- From ----------------
+    # From: bottom-left
     from_text = f"From: {from_name}"
     from_bbox = draw.textbbox((0,0), from_text, font=font_large)
     from_height = from_bbox[3] - from_bbox[1]
     from_pos = (padding, height - padding - from_height)
     draw.text(from_pos, from_text, fill=(0,0,0), font=font_large)
 
-    # ---------------- Message ----------------
+    # Message area
     message_top = padding + to_height + 40
     message_bottom = height - padding - from_height - 40
     message_left = padding + 40
     message_right = width - padding - 40
 
-    wrapper = textwrap.TextWrapper(width=30)
+    wrapper = textwrap.TextWrapper(width=20)  # narrower for big font
     lines = wrapper.wrap(text=message)
 
-    # Calculate line height
-    line_height = font_medium.getbbox("A")[3] - font_medium.getbbox("A")[1] + 20
+    line_height = font_medium.getbbox("A")[3] - font_medium.getbbox("A")[1] + 30
     total_text_height = len(lines) * line_height
-
-    # Vertical centering
     start_y = message_top + ((message_bottom - message_top - total_text_height) // 2)
 
     for line in lines:
         draw.text((message_left, start_y), line, fill=(0,0,0), font=font_medium)
         start_y += line_height
 
-    # ---------------- Stamp ----------------
-    stamp_size = 120
+    # Stamp
+    stamp_size = 150
     draw.rectangle(
         [width - padding - stamp_size, height - padding - stamp_size, width - padding, height - padding],
         outline=(150,0,0), width=5
     )
-    stamp_text = "STAMP"
     draw.text(
-        (width - padding - stamp_size + 10, height - padding - stamp_size + 35),
-        stamp_text, fill=(150,0,0), font=font_small
+        (width - padding - stamp_size + 10, height - padding - stamp_size + 50),
+        "STAMP", fill=(150,0,0), font=font_small
     )
 
     return base
+
 
 def send_postcard_email(image_bytes):
     """Send postcard via Resend API with attachment"""
