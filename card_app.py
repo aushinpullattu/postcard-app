@@ -65,17 +65,15 @@ def create_postcard_super_clear(to_name, from_name, message):
         width=12
     )
 
-    # ---------------- Letter Image (TOP CENTER, very top) ----------------
-    letter_img = load_image("letter-pic.png")
-    max_letter_width = 180
-    letter_ratio = max_letter_width / letter_img.width
-    letter_img = letter_img.resize(
-        (int(letter_img.width * letter_ratio), int(letter_img.height * letter_ratio)),
-        Image.LANCZOS
-    )
-    letter_x = width // 2 - letter_img.width // 2
-    letter_y = 10  # very top
-    base.paste(letter_img, (letter_x, letter_y), letter_img)
+    # ---------------- Top Text: "Postcard for you!" ----------------
+    font_top = load_font("PatrickHand-Regular.ttf", 72)
+    top_text = "Postcard for you!"
+    bbox = draw.textbbox((0, 0), top_text, font=font_top)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    top_x = width // 2 - text_width // 2
+    top_y = 20  # near top
+    draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
     # ---------------- Teddy Image (LEFT, BIG, CLEAR) ----------------
     teddy_img = load_image("teddy-pic.png")
