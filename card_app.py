@@ -77,7 +77,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     top_y = 20
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
-    # ---------------- Teddy Image (top-right) ----------------
+    # ---------------- Teddy Image (top-left) ----------------
     teddy_img = load_image("teddy-pic.png")
     max_teddy_size = 250  # slightly smaller
     teddy_ratio = min(
@@ -88,7 +88,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         (int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)),
         Image.LANCZOS
     )
-    teddy_x = width - teddy_img.width - padding
+    teddy_x = padding
     teddy_y = top_y + 80  # below top text
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
@@ -124,7 +124,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         font=font_message
     )
 
-    # ---------------- User camera image (middle-right) ----------------
+    # ---------------- User camera image (middle-left) ----------------
     if user_img is not None:
         # Resize image
         max_size = 200
@@ -139,8 +139,8 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         frame_color = (92, 64, 51)
         img_width, img_height = user_img.size
 
-        # Position: middle-right, below teddy
-        user_x = width - img_width - padding
+        # Position: middle-left, below teddy
+        user_x = padding
         user_y = teddy_y + teddy_img.height + 30  # some gap below teddy
 
         # Draw frame
@@ -159,10 +159,10 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         base.paste(user_img, (user_x, user_y), user_img)
 
         # ---------------- From text below user image ----------------
-        from_x = padding + 40
+        from_x = padding
         from_y = user_y + img_height + 50
     else:
-        from_x = padding + 40
+        from_x = padding
         from_y = height - 120
 
     # Draw From text
