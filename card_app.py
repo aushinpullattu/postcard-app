@@ -67,17 +67,18 @@ def create_postcard_super_clear(to_name, from_name, message):
         width=12
     )
 
-    # ---------------- Stamp & Teddy Images ----------------
+    # ---------------- Images ----------------
     stamp_img = load_image("teddy-stamp.png", size=(160, 160))
-    teddy_img = load_image("teddy-pic.png", size=(220, 220))
+    teddy_img = load_image("teddy-pic.png", size=(420, 420))  # BIG teddy
 
+    # Stamp (top-right)
     stamp_x = width - padding - stamp_img.width
     stamp_y = padding
-
-    teddy_x = width - padding - teddy_img.width - 40
-    teddy_y = stamp_y + stamp_img.height + 20
-
     base.paste(stamp_img, (stamp_x, stamp_y), stamp_img)
+
+    # Teddy (left side, centered vertically)
+    teddy_x = padding + 20
+    teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # ---------------- Fonts ----------------
@@ -85,9 +86,9 @@ def create_postcard_super_clear(to_name, from_name, message):
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
 
-    # ---------------- Right column ----------------
+    # ---------------- Right column text ----------------
     right_x = int(width * 0.55)
-    start_y = int(height * 0.35)
+    start_y = int(height * 0.30)
     line_gap = 70
 
     draw.text(
@@ -112,13 +113,10 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_message
     )
 
-    # ---------------- From (center-left) ----------------
+    # ---------------- From (bottom-left, under teddy) ----------------
     from_text = f"From: {from_name}"
-    bbox = draw.textbbox((0, 0), from_text, font=font_medium)
-    text_height = bbox[3] - bbox[1]
-
     draw.text(
-        (padding, height // 2 - text_height // 2),
+        (padding + 40, height - 120),
         from_text,
         fill=ink_brown,
         font=font_medium
