@@ -121,7 +121,7 @@ def send_postcard_email(image_bytes, receiver_email):
     encoded_image = base64.b64encode(image_bytes.getvalue()).decode()
 
     data = {
-        "from": "Postcard <hello@postcard.work>"  # ✅ allowed sender
+        "from": "Postcard <hello@postcard.work>",  # ✅ allowed sender
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
         "html": "<p>You’ve received a cute postcard 💌</p>",
