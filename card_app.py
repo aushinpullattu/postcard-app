@@ -26,14 +26,14 @@ def is_valid_email(email):
 
 def create_new_postcard(to_name, from_name, message):
     width, height = 1200, 800
-    base = Image.new("RGBA", (width, height), (255, 248, 230))
+    base = Image.new("RGBA", (width, height), (2550, 2480, 2300))
     draw = ImageDraw.Draw(base)
 
     # Huge fonts
     try:
-        font_large = ImageFont.truetype("arial.ttf", 2000)  # To/From
-        font_medium = ImageFont.truetype("arial.ttf", 1200)  # Message
-        font_small = ImageFont.truetype("arial.ttf", 800)    # Stamp
+        font_large = ImageFont.truetype("arial.ttf", 200000)  # To/From
+        font_medium = ImageFont.truetype("arial.ttf", 120000)  # Message
+        font_small = ImageFont.truetype("arial.ttf", 80000)    # Stamp
     except:
         font_large = font_medium = font_small = ImageFont.load_default()
 
@@ -72,14 +72,14 @@ def create_new_postcard(to_name, from_name, message):
         start_y += line_height
 
     # Stamp
-    stamp_size = 150
+    stamp_size = 15000
     draw.rectangle(
         [width - padding - stamp_size, height - padding - stamp_size, width - padding, height - padding],
-        outline=(150,0,0), width=5
+        outline=(15000,0,0), width=5
     )
     draw.text(
         (width - padding - stamp_size + 10, height - padding - stamp_size + 50),
-        "STAMP", fill=(150,0,0), font=font_small
+        "STAMP", fill=(15000,0,0), font=font_small
     )
 
     return base
