@@ -40,9 +40,9 @@ def create_postcard_image(to_name, from_name, message):
     from_position = (50, postcard.height - 100)
     message_position = (50, 150)
 
-    # Draw text
+    # Draw "To"
     draw.text(to_position, f"To: {to_name}", fill="black", font=font)
-    
+
     # Split message into multiple lines if too long
     max_width = postcard.width - 100
     lines = []
@@ -50,7 +50,8 @@ def create_postcard_image(to_name, from_name, message):
     line = ""
     for word in words:
         test_line = f"{line} {word}".strip()
-        w, _ = draw.textsize(test_line, font=font_small)
+        bbox = draw.textbbox((0, 0), test_line, font=font_small)
+        w = bbox[2] - bbox[0]  # width of the text
         if w <= max_width:
             line = test_line
         else:
@@ -58,9 +59,11 @@ def create_postcard_image(to_name, from_name, message):
             line = word
     lines.append(line)
 
+    # Draw message lines
     for i, line in enumerate(lines):
         draw.text((message_position[0], message_position[1] + i * 30), line, fill="black", font=font_small)
 
+    # Draw "From"
     draw.text(from_position, f"From: {from_name}", fill="black", font=font)
 
     return postcard
@@ -83,7 +86,7 @@ def send_postcard_email(image_bytes):
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
         "html": html,
-        # Normally you'd send attachments via proper API method; this is just a placeholder
+        # Note: Actual image attachment logic depends on the API
     }
 
     r = requests.post(url, headers=headers, json=data)
@@ -103,7 +106,7 @@ if st.button("📨 Send Postcard"):
             # Show postcard in Streamlit
             st.image(postcard_image, use_container_width=True)
 
-            # Optionally: convert to bytes to send via email
+            # Convert image to bytes for sending via email
             img_bytes = io.BytesIO()
             postcard_image.save(img_bytes, format="PNG")
             img_bytes.seek(0)
