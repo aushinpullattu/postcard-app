@@ -28,7 +28,6 @@ header {visibility: hidden;}
 
 st.title("📮 Send a Postcard")
 
-
 # ---------------- Inputs ----------------
 to_name = st.text_input("To")
 from_name = st.text_input("From")
@@ -44,6 +43,14 @@ def load_font(font_name, size):
         raise FileNotFoundError(f"Font file not found: {font_name}")
     return ImageFont.truetype(font_name, size)
 
+def load_image(image_name, size=None):
+    if not os.path.exists(image_name):
+        raise FileNotFoundError(f"Image file not found: {image_name}")
+    img = Image.open(image_name).convert("RGBA")
+    if size:
+        img = img.resize(size, Image.LANCZOS)
+    return img
+
 def create_postcard_super_clear(to_name, from_name, message):
     width, height = 1000, 800
     bg_color = (240, 240, 220)
@@ -53,28 +60,32 @@ def create_postcard_super_clear(to_name, from_name, message):
     draw = ImageDraw.Draw(base)
     padding = 60
 
-    # Border
+    # ---------------- Border ----------------
     draw.rectangle(
         [0, 0, width - 1, height - 1],
         outline=(139, 94, 60),
         width=12
     )
 
-    # Fonts
+    # ---------------- Stamp & Teddy Images ----------------
+    stamp_img = load_image("teddy-stamp.png", size=(160, 160))
+    teddy_img = load_image("teddy-pic.png", size=(220, 220))
+
+    stamp_x = width - padding - stamp_img.width
+    stamp_y = padding
+
+    teddy_x = width - padding - teddy_img.width - 40
+    teddy_y = stamp_y + stamp_img.height + 20
+
+    base.paste(stamp_img, (stamp_x, stamp_y), stamp_img)
+    base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
+
+    # ---------------- Fonts ----------------
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
-    font_stamp = load_font("PatrickHand-Regular.ttf", 42)
 
-    # Stamp
-    draw.text(
-        (width - padding - 140, padding),
-        "STAMP",
-        fill=ink_brown,
-        font=font_stamp
-    )
-
-    # Right column
+    # ---------------- Right column ----------------
     right_x = int(width * 0.55)
     start_y = int(height * 0.35)
     line_gap = 70
@@ -101,7 +112,7 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_message
     )
 
-    # From (center-left)
+    # ---------------- From (center-left) ----------------
     from_text = f"From: {from_name}"
     bbox = draw.textbbox((0, 0), from_text, font=font_medium)
     text_height = bbox[3] - bbox[1]
@@ -124,7 +135,7 @@ def send_postcard_email(image_bytes, receiver_email):
     encoded_image = base64.b64encode(image_bytes.getvalue()).decode()
 
     data = {
-        "from": "Postcard <hello@postcard.work>",  # ✅ allowed sender
+        "from": "Postcard <hello@postcard.work>",
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
         "html": "<p>You’ve received a cute postcard 💌</p>",
@@ -164,7 +175,6 @@ if st.button("📨 Send Postcard"):
                 message_input
             )
 
-            # IMPORTANT: no resizing here
             st.image(postcard_image)
 
             img_bytes = io.BytesIO()
@@ -177,3 +187,4 @@ if st.button("📨 Send Postcard"):
 
         except Exception as e:
             st.error(str(e))
+        
