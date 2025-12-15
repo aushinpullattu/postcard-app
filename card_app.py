@@ -48,12 +48,6 @@ def load_image(image_name):
         raise FileNotFoundError(f"Image file not found: {image_name}")
     return Image.open(image_name).convert("RGBA")
 
-def format_text(text):
-    text = text.strip()
-    if text.islower():
-        return text.capitalize()
-    return text
-
 # ---------------- Postcard Generator ----------------
 def create_postcard_super_clear(to_name, from_name, message):
     width, height = 1000, 800
@@ -71,7 +65,7 @@ def create_postcard_super_clear(to_name, from_name, message):
         width=12
     )
 
-        # ---------------- Letter Image (TOP CENTER) ----------------
+    # ---------------- Letter Image (TOP CENTER, very top) ----------------
     letter_img = load_image("letter-pic.png")
     max_letter_width = 180
     letter_ratio = max_letter_width / letter_img.width
@@ -79,11 +73,9 @@ def create_postcard_super_clear(to_name, from_name, message):
         (int(letter_img.width * letter_ratio), int(letter_img.height * letter_ratio)),
         Image.LANCZOS
     )
-    
     letter_x = width // 2 - letter_img.width // 2
-    letter_y = padding - 50  # moved a little higher
+    letter_y = 10  # very top
     base.paste(letter_img, (letter_x, letter_y), letter_img)
-
 
     # ---------------- Teddy Image (LEFT, BIG, CLEAR) ----------------
     teddy_img = load_image("teddy-pic.png")
@@ -96,7 +88,6 @@ def create_postcard_super_clear(to_name, from_name, message):
         (int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)),
         Image.LANCZOS
     )
-
     teddy_x = padding + 20
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
@@ -105,11 +96,6 @@ def create_postcard_super_clear(to_name, from_name, message):
     font_big = load_font("PatrickHand-Regular.ttf", 64)
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
-
-    # ---------------- Format user text ----------------
-    to_name = format_text(to_name)
-    from_name = format_text(from_name)
-    message = format_text(message)
 
     # ---------------- Right column ----------------
     right_x = int(width * 0.55)
@@ -138,7 +124,6 @@ def create_postcard_super_clear(to_name, from_name, message):
         font=font_message
     )
 
-    # ---------------- From (bottom-left) ----------------
     draw.text(
         (padding + 40, height - 120),
         f"From: {from_name}",
