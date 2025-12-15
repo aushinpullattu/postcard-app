@@ -1,9 +1,9 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
-import os
 import re
 import requests
+import os
 
 # ---------------- Page config ----------------
 st.set_page_config(
@@ -24,7 +24,7 @@ def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 def create_dynamic_postcard(to_name, from_name, message):
-    # Load your uploaded postcard template
+    # Safe template path
     template_path = os.path.join(os.path.dirname(__file__), "postcard_template.png")
     postcard = Image.open(template_path).convert("RGBA")
     draw = ImageDraw.Draw(postcard)
@@ -32,15 +32,15 @@ def create_dynamic_postcard(to_name, from_name, message):
     # Fonts
     try:
         font_large = ImageFont.truetype("arial.ttf", 36)
-        font_medium = ImageFont.truetype("arial.ttf", 28)
+        font_medium = ImageFont.truetype("arial.ttf", 32)
     except:
         font_large = font_medium = ImageFont.load_default()
 
-    # Positions (adjust these based on your template)
+    # Positions
     to_pos = (120, 50)
     from_pos = (120, postcard.height - 100)
-    message_pos = (50, 150)
-    message_max_width = 400
+    message_pos = (to_pos[0], to_pos[1] + 100)
+    message_max_width = postcard.width - 2 * message_pos[0]
 
     # Draw To
     draw.text(to_pos, f"To: {to_name}", fill="black", font=font_large)
@@ -48,7 +48,7 @@ def create_dynamic_postcard(to_name, from_name, message):
     # Draw From
     draw.text(from_pos, f"From: {from_name}", fill="black", font=font_large)
 
-    # Draw Message with wrapping
+    # Wrap message
     lines = []
     words = message.split()
     line = ""
@@ -62,8 +62,10 @@ def create_dynamic_postcard(to_name, from_name, message):
             line = word
     lines.append(line)
 
+    # Draw message with spacing
+    line_spacing = 40
     for i, line in enumerate(lines):
-        draw.text((message_pos[0], message_pos[1] + i*35), line, fill="black", font=font_medium)
+        draw.text((message_pos[0], message_pos[1] + i * line_spacing), line, fill="black", font=font_medium)
 
     return postcard
 
