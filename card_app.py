@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Make Streamlit background beige
+# Streamlit background beige
 st.markdown(
     """
     <style>
@@ -35,19 +35,19 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_postcard_high_res(to_name, from_name, message):
+def create_postcard_high_res_small_canvas(to_name, from_name, message):
     """
-    Create postcard at high resolution with Patrick font and super big, sharp text.
+    Create postcard with smaller canvas (500x400) but crisp, big text using Patrick font.
     """
-    # ---------------- High-res canvas ----------------
-    scale = 4  # 4x bigger for sharp text
-    width, height = 500*scale, 300*scale  # final desired size 500x300
+    # ---------------- High-res rendering ----------------
+    scale = 4  # render 4x bigger internally
+    width, height = 500*scale, 400*scale
     base = Image.new("RGBA", (width, height), (245, 240, 225))  # beige background
     draw = ImageDraw.Draw(base)
-    padding = 40 * scale
+    padding = 20 * scale
 
     # Brown border
-    draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=20*scale)
+    draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=10*scale)
 
     # ---------------- Load Patrick font ----------------
     try:
@@ -79,7 +79,7 @@ def create_postcard_high_res(to_name, from_name, message):
     msg_width = msg_bbox[2] - msg_bbox[0]
     msg_height = msg_bbox[3] - msg_bbox[1]
     msg_x = width - padding - msg_width
-    msg_y = height - padding - msg_height - 50*scale  # slightly above bottom
+    msg_y = height - padding - msg_height - 30*scale  # slightly above bottom
     draw.text((msg_x, msg_y), message_text, fill=(0,0,0), font=font_message)
 
     # ---------------- Stamp (top-right) ----------------
@@ -88,8 +88,8 @@ def create_postcard_high_res(to_name, from_name, message):
     stamp_width = stamp_bbox[2] - stamp_bbox[0]
     draw.text((width - padding - stamp_width, padding), stamp_text, fill=(139,94,60), font=font_stamp)
 
-    # ---------------- Downscale for final output ----------------
-    final_width, final_height = 500, 300
+    # ---------------- Downscale to final canvas ----------------
+    final_width, final_height = 500, 400
     postcard_resized = base.resize((final_width, final_height), resample=Image.LANCZOS)
 
     return postcard_resized
@@ -127,8 +127,8 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Generate high-res postcard
-            postcard_image = create_postcard_high_res(to_name, from_name, message_input)
+            # Generate postcard
+            postcard_image = create_postcard_high_res_small_canvas(to_name, from_name, message_input)
 
             # Show preview
             st.image(postcard_image, use_column_width=True)
