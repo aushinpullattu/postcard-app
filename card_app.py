@@ -24,7 +24,7 @@ def is_valid_email(email):
 
 def create_dynamic_postcard(to_name, from_name, message):
     # Load your uploaded postcard template
-    template_path = "postcard-template.png"
+    template_path = os.path.join(os.path.dirname(__file__), "postcard-template.png")
     postcard = Image.open(template_path).convert("RGBA")
     draw = ImageDraw.Draw(postcard)
 
