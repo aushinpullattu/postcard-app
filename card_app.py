@@ -94,9 +94,11 @@ def create_postcard(to_name, from_name, message, user_img=None):
     draw.text((right_x, start_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
     # To
     draw.text((right_x, start_y + line_gap), f"To: {to_name}", fill=ink_brown, font=font_big)
-    # Message
+    # Message label
+    draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_big)
+    # Actual message content
     wrapped_message = textwrap.fill(message, width=22)
-    draw.text((right_x, start_y + line_gap*2.2), wrapped_message, fill=ink_brown, font=font_message)
+    draw.text((right_x + 10, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_message)
 
     # ---------------- User photo (bottom-left) ----------------
     if user_img is not None:
