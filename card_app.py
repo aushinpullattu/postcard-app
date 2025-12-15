@@ -2,12 +2,18 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import io
+import os
 
 # ----------------------------
-# Constants
+# Paths
 # ----------------------------
-TEMPLATE_PATH = "postcard_template.png"
-FONT_PATH = "fonts/PatrickHand-Regular.ttf"
+# Robust font path relative to this script
+FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "PatrickHand-Regular.ttf")
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "postcard_template.png")
+
+# Debug: confirm font exists
+st.write("Font exists:", os.path.isfile(FONT_PATH))
+st.write("Font absolute path:", os.path.abspath(FONT_PATH))
 
 # ----------------------------
 # Postcard generator function
@@ -23,7 +29,7 @@ def generate_postcard(to_name, from_name, message):
 
     text_color = "#4a4a4a"
 
-    # -------- Positions (tuned for your template) --------
+    # -------- Positions (tuned for 1600x1000 template) --------
     to_position = (900, 420)         # Right side, top
     message_position = (900, 500)    # Right side, middle
     from_position = (250, 850)       # Left side, bottom
@@ -47,9 +53,9 @@ def generate_postcard(to_name, from_name, message):
     return img
 
 # ----------------------------
-# Streamlit app
+# Streamlit UI
 # ----------------------------
-st.title("💌 Custom Postcard Generator")
+st.title("💌 Postcard Generator")
 
 # User inputs
 to_name = st.text_input("To")
