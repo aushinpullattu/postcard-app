@@ -131,7 +131,7 @@ if st.button("📨 Send Postcard"):
             postcard_image = create_postcard_high_res_small_canvas(to_name, from_name, message_input)
 
             # Show preview
-            st.image(postcard_image, use_column_width=True)
+            st.image(postcard_image,width = 500)
 
             # Convert to bytes
             img_bytes = io.BytesIO()
