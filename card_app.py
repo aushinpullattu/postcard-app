@@ -62,11 +62,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     padding = 60
 
     # ---------------- Border ----------------
-    draw.rectangle(
-        [0, 0, width - 1, height - 1],
-        outline=(139, 94, 60),
-        width=12
-    )
+    draw.rectangle([0, 0, width - 1, height - 1], outline=(139, 94, 60), width=12)
 
     # ---------------- Top Text ----------------
     font_top = load_font("PatrickHand-Regular.ttf", 72)
@@ -77,17 +73,11 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     top_y = 20
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
-    # ---------------- Teddy Image (top-left) ----------------
+    # ---------------- Teddy Image (top-left, bigger) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_teddy_size = 250
-    teddy_ratio = min(
-        max_teddy_size / teddy_img.width,
-        max_teddy_size / teddy_img.height
-    )
-    teddy_img = teddy_img.resize(
-        (int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)),
-        Image.LANCZOS
-    )
+    max_teddy_size = 300  # bigger
+    teddy_ratio = min(max_teddy_size / teddy_img.width, max_teddy_size / teddy_img.height)
+    teddy_img = teddy_img.resize((int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)), Image.LANCZOS)
     teddy_x = padding
     teddy_y = top_y + 80
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
@@ -102,84 +92,45 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     start_y = int(height * 0.30)
     line_gap = 80
 
-    draw.text(
-        (right_x, start_y),
-        f"To:  {to_name}",
-        fill=ink_brown,
-        font=font_big
-    )
-
-    draw.text(
-        (right_x, start_y + line_gap * 1.4),
-        "Message:",
-        fill=ink_brown,
-        font=font_big
-    )
-
+    draw.text((right_x, start_y), f"To:  {to_name}", fill=ink_brown, font=font_big)
+    draw.text((right_x, start_y + line_gap * 1.4), "Message:", fill=ink_brown, font=font_big)
     wrapped_message = textwrap.fill(message, width=22)
-    draw.text(
-        (right_x + 10, start_y + line_gap * 2.4),
-        wrapped_message,
-        fill=ink_brown,
-        font=font_message
-    )
+    draw.text((right_x + 10, start_y + line_gap * 2.4), wrapped_message, fill=ink_brown, font=font_message)
+
+    # ---------------- From text (center-left vertically) ----------------
+    bbox_from = draw.textbbox((0, 0), f"From: {from_name}", font=font_medium)
+    from_text_height = bbox_from[3] - bbox_from[1]
+    from_x = padding
+    from_y = height // 2 - from_text_height // 2
+    draw.text((from_x, from_y), f"From: {from_name}", fill=ink_brown, font=font_medium)
 
     # ---------------- User camera image (bottom-left) ----------------
     if user_img is not None:
-        # Resize image
         max_size = 200
         ratio = min(max_size / user_img.width, max_size / user_img.height)
-        user_img = user_img.resize(
-            (int(user_img.width * ratio), int(user_img.height * ratio)),
-            Image.LANCZOS
-        )
+        user_img = user_img.resize((int(user_img.width * ratio), int(user_img.height * ratio)), Image.LANCZOS)
         img_width, img_height = user_img.size
 
-        # Position: bottom-left
+        # Bottom-left position
         user_x = padding
-        user_y = height - img_height - 120  # leave space for "From" text above
+        user_y = height - img_height - 60  # leave some padding from bottom
 
-        # Draw normal brown frame around photo
+        # Normal brown frame
         frame_padding = 6
         frame_color = (92, 64, 51)
-        draw.rectangle(
-            [
-                user_x - frame_padding,
-                user_y - frame_padding,
-                user_x + img_width + frame_padding,
-                user_y + img_height + frame_padding
-            ],
-            outline=frame_color,
-            width=4
-        )
+        draw.rectangle([user_x - frame_padding, user_y - frame_padding,
+                        user_x + img_width + frame_padding, user_y + img_height + frame_padding],
+                       outline=frame_color, width=4)
 
-        # Paste photo inside frame
         base.paste(user_img, (user_x, user_y), user_img)
-
-        # ---------------- From text above photo ----------------
-        from_x = padding
-        from_y = user_y - 60  # just above the photo
-    else:
-        from_x = padding
-        from_y = height - 120
-
-    # Draw From text
-    draw.text(
-        (from_x, from_y),
-        f"From: {from_name}",
-        fill=ink_brown,
-        font=font_medium
-    )
 
     return base
 
 # ---------------- Email Sender ----------------
 def send_postcard_email(image_bytes, receiver_email):
     api_key = st.secrets.get("RESEND_API_KEY")
-
     if not api_key:
         raise ValueError("RESEND_API_KEY not found in Streamlit secrets")
-
     encoded_image = base64.b64encode(image_bytes.getvalue()).decode()
 
     data = {
@@ -187,25 +138,11 @@ def send_postcard_email(image_bytes, receiver_email):
         "to": [receiver_email],
         "subject": "You received a postcard 💌",
         "html": "<p>You’ve received a cute postcard 💌</p>",
-        "attachments": [
-            {
-                "content": encoded_image,
-                "filename": "postcard.png"
-            }
-        ]
+        "attachments": [{"content": encoded_image, "filename": "postcard.png"}]
     }
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post(
-        "https://api.resend.com/emails",
-        headers=headers,
-        json=data
-    )
-
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    response = requests.post("https://api.resend.com/emails", headers=headers, json=data)
     if response.status_code != 200:
         raise Exception(f"Resend error {response.status_code}: {response.text}")
 
@@ -221,13 +158,7 @@ if st.button("📨 Send Postcard"):
             if user_photo is not None:
                 pil_user_img = Image.open(user_photo).convert("RGBA")
 
-            postcard_image = create_postcard_super_clear(
-                to_name,
-                from_name,
-                message_input,
-                user_img=pil_user_img
-            )
-
+            postcard_image = create_postcard_super_clear(to_name, from_name, message_input, user_img=pil_user_img)
             st.image(postcard_image)
 
             # Save postcard to BytesIO
