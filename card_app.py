@@ -8,11 +8,11 @@ import textwrap
 
 # ---------------- Page config ----------------
 st.set_page_config(
-    page_title="Send a Giant Postcard 💌",
+    page_title="Send a Giant Fixed-Size Postcard 💌",
     layout="centered"
 )
 
-st.title("📮 Send a Giant Postcard")
+st.title("📮 Send a Giant Fixed-Size Postcard")
 
 # ---------------- Inputs ----------------
 to_name = st.text_input("To")
@@ -24,13 +24,9 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_dynamic_giant_postcard(to_name, from_name, message):
+def create_fixed_giant_postcard(to_name, from_name, message):
     """
-    Generate a dynamically scaled giant postcard:
-    - To: middle-right
-    - From: bottom-left
-    - Message: bottom-right
-    - Stamp: top-right
+    Generate a postcard with fixed super big fonts.
     """
     # Canvas
     width, height = 1000, 800
@@ -39,20 +35,14 @@ def create_dynamic_giant_postcard(to_name, from_name, message):
 
     # Brown border
     border_thickness = 20
-    draw.rectangle([0, 0, width-1, height-1], outline=(139,94,60), width=border_thickness)
+    draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=border_thickness)
 
-    # ---------------- Dynamic Font Sizes ----------------
-    # Proportional font sizes relative to canvas
-    font_to_size = int(width * 0.60)      # To: 15% of width
-    font_from_size = int(width * 0.65)    # From: 15% of width
-    font_message_size = int(width * 0.92) # Message: 12% of width
-    font_stamp_size = int(width * 0.78)   # Stamp: 8% of width
-
+    # ---------------- Fixed Super Big Fonts ----------------
     try:
-        font_to = ImageFont.truetype("arial.ttf", font_to_size)
-        font_from = ImageFont.truetype("arial.ttf", font_from_size)
-        font_message = ImageFont.truetype("arial.ttf", font_message_size)
-        font_stamp = ImageFont.truetype("arial.ttf", font_stamp_size)
+        font_to = ImageFont.truetype("arial.ttf", 200)       # To
+        font_from = ImageFont.truetype("arial.ttf", 200)     # From
+        font_message = ImageFont.truetype("arial.ttf", 180)  # Message
+        font_stamp = ImageFont.truetype("arial.ttf", 120)    # Stamp
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
@@ -74,7 +64,7 @@ def create_dynamic_giant_postcard(to_name, from_name, message):
     draw.text((padding, height - padding - from_height), from_text, fill=(0,0,0), font=font_from)
 
     # ---------------- Message (bottom-right) ----------------
-    wrapper = textwrap.TextWrapper(width=10)  # narrower for big font
+    wrapper = textwrap.TextWrapper(width=10)  # narrow for big font
     lines = wrapper.wrap(text=message)
     line_height = font_message.getbbox("A")[3] - font_message.getbbox("A")[1] + 20
     total_text_height = len(lines) * line_height
@@ -127,8 +117,8 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Generate giant postcard
-            postcard_image = create_dynamic_giant_postcard(to_name, from_name, message)
+            # Generate fixed giant postcard
+            postcard_image = create_fixed_giant_postcard(to_name, from_name, message)
 
             # Show preview
             st.image(postcard_image, use_column_width=True)
