@@ -75,11 +75,11 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
 
     # ---------------- Teddy Image (top-left, bigger) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_teddy_size = 300  # bigger
+    max_teddy_size = 400  # increased size
     teddy_ratio = min(max_teddy_size / teddy_img.width, max_teddy_size / teddy_img.height)
     teddy_img = teddy_img.resize((int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)), Image.LANCZOS)
     teddy_x = padding
-    teddy_y = top_y + 80
+    teddy_y = top_y + 60
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # ---------------- Fonts ----------------
@@ -106,7 +106,8 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
 
     # ---------------- User camera image (bottom-left) ----------------
     if user_img is not None:
-        max_size = 200
+        # Resize image bigger
+        max_size = 300  # increased size
         ratio = min(max_size / user_img.width, max_size / user_img.height)
         user_img = user_img.resize((int(user_img.width * ratio), int(user_img.height * ratio)), Image.LANCZOS)
         img_width, img_height = user_img.size
