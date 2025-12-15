@@ -4,15 +4,14 @@ import io
 import re
 import requests
 import base64
-import textwrap
 
 # ---------------- Page config ----------------
 st.set_page_config(
-    page_title="Send a Giant Fixed-Size Postcard 💌",
+    page_title="Send a Postcard 💌",
     layout="centered"
 )
 
-st.title("📮 Send a Giant Fixed-Size Postcard")
+st.title("📮 Send a Postcard")
 
 # ---------------- Inputs ----------------
 to_name = st.text_input("To")
@@ -24,12 +23,16 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_fixed_giant_postcard(to_name, from_name, message):
+def create_fixed_super_big_postcard(to_name, from_name, message):
     """
-    Generate a postcard with fixed super big fonts.
+    Create a postcard with fixed super big fonts:
+    - To: middle-right
+    - From: bottom-left
+    - Message: bottom-right
+    - Stamp: top-right
     """
     # Canvas
-    width, height = 1000, 800
+    width, height = 100, 80
     base = Image.new("RGBA", (width, height), (245, 240, 225))  # beige background
     draw = ImageDraw.Draw(base)
 
@@ -37,12 +40,12 @@ def create_fixed_giant_postcard(to_name, from_name, message):
     border_thickness = 20
     draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=border_thickness)
 
-    # ---------------- Fixed Super Big Fonts ----------------
+    # ---------------- Fixed super big fonts ----------------
     try:
-        font_to = ImageFont.truetype("arial.ttf", 2000)       # To
-        font_from = ImageFont.truetype("arial.ttf", 2000)     # From
-        font_message = ImageFont.truetype("arial.ttf", 1080)  # Message
-        font_stamp = ImageFont.truetype("arial.ttf", 1200)    # Stamp
+        font_to = ImageFont.truetype("arial.ttf", 400)
+        font_from = ImageFont.truetype("arial.ttf", 400)
+        font_message = ImageFont.truetype("arial.ttf", 350)
+        font_stamp = ImageFont.truetype("arial.ttf", 200)
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
@@ -64,17 +67,14 @@ def create_fixed_giant_postcard(to_name, from_name, message):
     draw.text((padding, height - padding - from_height), from_text, fill=(0,0,0), font=font_from)
 
     # ---------------- Message (bottom-right) ----------------
-    wrapper = textwrap.TextWrapper(width=10)  # narrow for big font
-    lines = wrapper.wrap(text=message)
-    line_height = font_message.getbbox("A")[3] - font_message.getbbox("A")[1] + 20
-    total_text_height = len(lines) * line_height
-    start_y = height - padding - total_text_height
+    # Draw as one big block
+    msg_bbox = draw.textbbox((0,0), message, font=font_message)
+    msg_width = msg_bbox[2] - msg_bbox[0]
+    msg_height = msg_bbox[3] - msg_bbox[1]
 
-    for line in lines:
-        text_width = draw.textlength(line, font=font_message)
-        start_x = width - padding - text_width
-        draw.text((start_x, start_y), line, fill=(0,0,0), font=font_message)
-        start_y += line_height
+    msg_x = width - padding - msg_width
+    msg_y = height - padding - msg_height
+    draw.text((msg_x, msg_y), message, fill=(0,0,0), font=font_message)
 
     # ---------------- Stamp (top-right) ----------------
     stamp_text = "STAMP"
@@ -91,7 +91,7 @@ def send_postcard_email(image_bytes):
     data = {
         "from": "Postcard <onboarding@yourdomain.com>",
         "to": [receiver_email],
-        "subject": "You received a giant postcard 💌",
+        "subject": "You received a postcard 💌",
         "html": "<p>Here’s your postcard!</p>",
         "attachments": [
             {
@@ -117,8 +117,8 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Generate fixed giant postcard
-            postcard_image = create_fixed_giant_postcard(to_name, from_name, message)
+            # Generate postcard
+            postcard_image = create_fixed_super_big_postcard(to_name, from_name, message)
 
             # Show preview
             st.image(postcard_image, use_column_width=True)
@@ -130,7 +130,7 @@ if st.button("📨 Send Postcard"):
 
             # Send email
             send_postcard_email(img_bytes)
-            st.success("Giant postcard generated and sent 💖")
+            st.success("Postcard generated and sent 💖")
         except requests.exceptions.HTTPError as http_err:
             st.error(f"HTTP Error: {http_err} — check your Resend API key")
         except Exception as e:
