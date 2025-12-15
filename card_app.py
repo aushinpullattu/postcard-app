@@ -77,9 +77,9 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     top_y = 20
     draw.text((top_x, top_y), top_text, fill=ink_brown, font=font_top)
 
-    # ---------------- Teddy Image (LEFT) ----------------
+    # ---------------- Teddy Image (top-right) ----------------
     teddy_img = load_image("teddy-pic.png")
-    max_teddy_size = 420
+    max_teddy_size = 250  # slightly smaller
     teddy_ratio = min(
         max_teddy_size / teddy_img.width,
         max_teddy_size / teddy_img.height
@@ -88,8 +88,8 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         (int(teddy_img.width * teddy_ratio), int(teddy_img.height * teddy_ratio)),
         Image.LANCZOS
     )
-    teddy_x = padding + 20
-    teddy_y = height // 2 - teddy_img.height // 2
+    teddy_x = width - teddy_img.width - padding
+    teddy_y = top_y + 80  # below top text
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # ---------------- Fonts ----------------
@@ -97,7 +97,7 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     font_medium = load_font("PatrickHand-Regular.ttf", 56)
     font_message = load_font("PatrickHand-Regular.ttf", 52)
 
-    # ---------------- Right column ----------------
+    # ---------------- Right column text ----------------
     right_x = int(width * 0.55)
     start_y = int(height * 0.30)
     line_gap = 80
@@ -124,19 +124,9 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
         font=font_message
     )
 
-    # ---------------- From ----------------
-    from_x = padding + 40
-    from_y = height - 120
-    draw.text(
-        (from_x, from_y),
-        f"From: {from_name}",
-        fill=ink_brown,
-        font=font_medium
-    )
-
-    # ---------------- Add user camera image at bottom-right with brown frame ----------------
+    # ---------------- User camera image (middle-right) ----------------
     if user_img is not None:
-        # Resize to fit nicely
+        # Resize image
         max_size = 200
         ratio = min(max_size / user_img.width, max_size / user_img.height)
         user_img = user_img.resize(
@@ -146,14 +136,14 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
 
         # Frame settings
         frame_padding = 10
-        frame_color = (92, 64, 51)  # brown
+        frame_color = (92, 64, 51)
         img_width, img_height = user_img.size
 
-        # Position: bottom-right with padding
+        # Position: middle-right, below teddy
         user_x = width - img_width - padding
-        user_y = from_y + 70  # some gap below "From"
+        user_y = teddy_y + teddy_img.height + 30  # some gap below teddy
 
-        # Draw frame rectangle
+        # Draw frame
         draw.rectangle(
             [
                 user_x - frame_padding,
@@ -167,6 +157,21 @@ def create_postcard_super_clear(to_name, from_name, message, user_img=None):
 
         # Paste image
         base.paste(user_img, (user_x, user_y), user_img)
+
+        # ---------------- From text below user image ----------------
+        from_x = padding + 40
+        from_y = user_y + img_height + 50
+    else:
+        from_x = padding + 40
+        from_y = height - 120
+
+    # Draw From text
+    draw.text(
+        (from_x, from_y),
+        f"From: {from_name}",
+        fill=ink_brown,
+        font=font_medium
+    )
 
     return base
 
