@@ -4,6 +4,7 @@ import io
 import re
 import requests
 import base64
+import textwrap
 
 # ---------------- Page config ----------------
 st.set_page_config(
@@ -11,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Streamlit background beige
+# Background color
 st.markdown(
     """
     <style>
@@ -35,67 +36,65 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_postcard_high_res_small_canvas(to_name, from_name, message):
-    """
-    Create postcard with smaller canvas (500x400) but crisp, big text using Patrick font.
-    """
-    # ---------------- High-res rendering ----------------
-    scale = 4  # render 4x bigger internally
-    width, height = 100*scale, 80*scale
-    base = Image.new("RGBA", (width, height), (240, 240, 220))  # beige background
+def create_postcard_clear(to_name, from_name, message):
+    # Final canvas size (NO resizing)
+    width, height = 500, 400
+    base = Image.new("RGBA", (width, height), (240, 240, 220))
     draw = ImageDraw.Draw(base)
-    padding = 20 * scale
+    padding = 30
 
-    # Brown border
-    draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=10*scale)
+    # Border
+    draw.rectangle(
+        [0, 0, width - 1, height - 1],
+        outline=(139, 94, 60),
+        width=6
+    )
 
-    # ---------------- Load Patrick font ----------------
+    # Load font
     try:
-        font_to = ImageFont.truetype("Patrick.ttf", 10*scale)
-        font_from = ImageFont.truetype("Patrick.ttf", 10*scale)
-        font_message = ImageFont.truetype("Patrick.ttf", 8*scale)
-        font_stamp = ImageFont.truetype("Patrick.ttf", 5*scale)
+        font_to = ImageFont.truetype("Patrick.ttf", 28)
+        font_from = ImageFont.truetype("Patrick.ttf", 26)
+        font_message = ImageFont.truetype("Patrick.ttf", 22)
+        font_stamp = ImageFont.truetype("Patrick.ttf", 18)
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
-    # ---------------- To (middle-right) ----------------
-    to_text = f"To: {to_name}"
-    to_bbox = draw.textbbox((0,0), to_text, font=font_to)
-    to_width = to_bbox[2] - to_bbox[0]
-    to_height = to_bbox[3] - to_bbox[1]
-    to_x = width - padding - to_width
-    to_y = height // 2 - to_height // 2
-    draw.text((to_x, to_y), to_text, fill=(0,0,0), font=font_to)
+    # Stamp (top-right)
+    draw.text(
+        (width - padding - 70, padding),
+        "STAMP",
+        fill=(139, 94, 60),
+        font=font_stamp
+    )
 
-    # ---------------- From (bottom-left) ----------------
-    from_text = f"From: {from_name}"
-    from_bbox = draw.textbbox((0,0), from_text, font=font_from)
-    from_height = from_bbox[3] - from_bbox[1]
-    draw.text((padding, height - padding - from_height), from_text, fill=(0,0,0), font=font_from)
+    # To (middle-right)
+    draw.text(
+        (width - padding - 220, height // 2 - 20),
+        f"To: {to_name}",
+        fill=(0, 0, 0),
+        font=font_to
+    )
 
-    # ---------------- Message (bottom-right) ----------------
-    message_text = f"Message: {message}"
-    msg_bbox = draw.textbbox((0,0), message_text, font=font_message)
-    msg_width = msg_bbox[2] - msg_bbox[0]
-    msg_height = msg_bbox[3] - msg_bbox[1]
-    msg_x = width - padding - msg_width
-    msg_y = height - padding - msg_height - 30*scale  # slightly above bottom
-    draw.text((msg_x, msg_y), message_text, fill=(0,0,0), font=font_message)
+    # From (bottom-left)
+    draw.text(
+        (padding, height - padding - 40),
+        f"From: {from_name}",
+        fill=(0, 0, 0),
+        font=font_from
+    )
 
-    # ---------------- Stamp (top-right) ----------------
-    stamp_text = "STAMP"
-    stamp_bbox = draw.textbbox((0,0), stamp_text, font=font_stamp)
-    stamp_width = stamp_bbox[2] - stamp_bbox[0]
-    draw.text((width - padding - stamp_width, padding), stamp_text, fill=(139,94,60), font=font_stamp)
+    # Message (wrapped, bottom-right)
+    wrapped_message = textwrap.fill(f"Message: {message}", width=26)
+    draw.text(
+        (width - padding - 260, height - padding - 120),
+        wrapped_message,
+        fill=(0, 0, 0),
+        font=font_message
+    )
 
-    # ---------------- Downscale to final canvas ----------------
-    final_width, final_height = 500, 400
-    postcard_resized = base.resize((final_width, final_height), resample=Image.LANCZOS)
-
-    return postcard_resized
+    return base
 
 def send_postcard_email(image_bytes):
-    """Send postcard via Resend API with attachment"""
     encoded_image = base64.b64encode(image_bytes.getvalue()).decode()
 
     data = {
@@ -116,6 +115,7 @@ def send_postcard_email(image_bytes):
         "Authorization": f"Bearer {st.secrets['RESEND_API_KEY']}",
         "Content-Type": "application/json"
     }
+
     r = requests.post(url, headers=headers, json=data)
     r.raise_for_status()
 
@@ -127,11 +127,14 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Generate postcard
-            postcard_image = create_postcard_high_res_small_canvas(to_name, from_name, message_input)
+            postcard_image = create_postcard_clear(
+                to_name,
+                from_name,
+                message_input
+            )
 
-            # Show preview
-            st.image(postcard_image,width = 500)
+            # Preview
+            st.image(postcard_image, width=500)
 
             # Convert to bytes
             img_bytes = io.BytesIO()
@@ -140,7 +143,9 @@ if st.button("📨 Send Postcard"):
 
             # Send email
             send_postcard_email(img_bytes)
+
             st.success("Postcard generated and sent 💖")
+
         except requests.exceptions.HTTPError as http_err:
             st.error(f"HTTP Error: {http_err} — check your Resend API key")
         except Exception as e:
