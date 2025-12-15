@@ -8,11 +8,11 @@ import textwrap
 
 # ---------------- Page config ----------------
 st.set_page_config(
-    page_title="Send a Stylish Postcard 💌",
+    page_title="Send a Giant Postcard 💌",
     layout="centered"
 )
 
-st.title("📮 Send a Stylish Postcard")
+st.title("📮 Send a Giant Postcard")
 
 # ---------------- Inputs ----------------
 to_name = st.text_input("To")
@@ -24,13 +24,17 @@ receiver_email = st.text_input("Recipient Email")
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-def create_stylish_postcard(to_name, from_name, message):
+def create_giant_postcard(to_name, from_name, message):
     """
-    Generate a stylish postcard with beige background, brown border, large user input text, 
-    and a stamp on top-right.
+    Generates a giant postcard:
+    - To: middle-right
+    - From: bottom-left
+    - Message: bottom-right
+    - Stamp: top-right
+    - Super large fonts
     """
     # Canvas
-    width, height = 800, 600  # smaller postcard
+    width, height = 1000, 800
     base = Image.new("RGBA", (width, height), (245, 240, 225))  # beige background
     draw = ImageDraw.Draw(base)
 
@@ -38,45 +42,46 @@ def create_stylish_postcard(to_name, from_name, message):
     border_thickness = 20
     draw.rectangle([0,0,width-1,height-1], outline=(139,94,60), width=border_thickness)
 
-    # Fonts
+    # ---------------- Super large fonts ----------------
     try:
-        font_to = ImageFont.truetype("arial.ttf", 60)
-        font_from = ImageFont.truetype("arial.ttf", 60)
-        font_message = ImageFont.truetype("arial.ttf", 70)
-        font_stamp = ImageFont.truetype("arial.ttf", 40)
+        font_to = ImageFont.truetype("arial.ttf", 600)       # To
+        font_from = ImageFont.truetype("arial.ttf", 600)     # From
+        font_message = ImageFont.truetype("arial.ttf", 500)  # Message
+        font_stamp = ImageFont.truetype("arial.ttf", 300)    # Stamp
     except:
         font_to = font_from = font_message = font_stamp = ImageFont.load_default()
 
-    padding = 30
+    padding = 40
 
-    # ---------------- To ----------------
+    # ---------------- To (middle-right) ----------------
     to_text = f"To: {to_name}"
-    draw.text((padding, padding), to_text, fill=(0,0,0), font=font_to)
+    to_bbox = draw.textbbox((0,0), to_text, font=font_to)
+    to_width = to_bbox[2] - to_bbox[0]
+    to_height = to_bbox[3] - to_bbox[1]
+    to_x = width - padding - to_width
+    to_y = height // 2 - to_height // 2
+    draw.text((to_x, to_y), to_text, fill=(0,0,0), font=font_to)
 
-    # ---------------- From ----------------
+    # ---------------- From (bottom-left) ----------------
     from_text = f"From: {from_name}"
     from_bbox = draw.textbbox((0,0), from_text, font=font_from)
     from_height = from_bbox[3] - from_bbox[1]
     draw.text((padding, height - padding - from_height), from_text, fill=(0,0,0), font=font_from)
 
-    # ---------------- Message ----------------
-    # Wrap message
-    wrapper = textwrap.TextWrapper(width=25)
+    # ---------------- Message (bottom-right) ----------------
+    wrapper = textwrap.TextWrapper(width=10)  # very narrow for huge font
     lines = wrapper.wrap(text=message)
-
-    # Calculate total height
     line_height = font_message.getbbox("A")[3] - font_message.getbbox("A")[1] + 20
     total_text_height = len(lines) * line_height
-    start_y = (height - total_text_height) // 2  # center vertically
+    start_y = height - padding - total_text_height
 
-    # Draw message
     for line in lines:
         text_width = draw.textlength(line, font=font_message)
-        start_x = (width - text_width) // 2  # center horizontally
+        start_x = width - padding - text_width
         draw.text((start_x, start_y), line, fill=(0,0,0), font=font_message)
         start_y += line_height
 
-    # ---------------- Stamp ----------------
+    # ---------------- Stamp (top-right) ----------------
     stamp_text = "STAMP"
     stamp_bbox = draw.textbbox((0,0), stamp_text, font=font_stamp)
     stamp_width = stamp_bbox[2] - stamp_bbox[0]
@@ -91,7 +96,7 @@ def send_postcard_email(image_bytes):
     data = {
         "from": "Postcard <onboarding@yourdomain.com>",
         "to": [receiver_email],
-        "subject": "You received a stylish postcard 💌",
+        "subject": "You received a giant postcard 💌",
         "html": "<p>Here’s your postcard!</p>",
         "attachments": [
             {
@@ -117,8 +122,8 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
-            # Generate stylish postcard
-            postcard_image = create_stylish_postcard(to_name, from_name, message)
+            # Generate giant postcard
+            postcard_image = create_giant_postcard(to_name, from_name, message)
 
             # Show preview
             st.image(postcard_image, use_column_width=True)
@@ -130,7 +135,7 @@ if st.button("📨 Send Postcard"):
 
             # Send email
             send_postcard_email(img_bytes)
-            st.success("Postcard generated and sent 💖")
+            st.success("Giant postcard generated and sent 💖")
         except requests.exceptions.HTTPError as http_err:
             st.error(f"HTTP Error: {http_err} — check your Resend API key")
         except Exception as e:
