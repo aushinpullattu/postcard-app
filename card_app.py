@@ -34,6 +34,9 @@ from_name = st.text_input("From")
 message_input = st.text_area("Message", max_chars=500)
 receiver_email = st.text_input("Recipient Email")
 
+# ---------------- Camera Input ----------------
+user_photo = st.camera_input("Take a photo to include in your postcard")
+
 # ---------------- Helpers ----------------
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
@@ -49,7 +52,7 @@ def load_image(image_name):
     return Image.open(image_name).convert("RGBA")
 
 # ---------------- Postcard Generator ----------------
-def create_postcard_super_clear(to_name, from_name, message):
+def create_postcard_super_clear(to_name, from_name, message, user_img=None):
     width, height = 1000, 800
     bg_color = (240, 240, 220)
     ink_brown = (92, 64, 51)
@@ -88,6 +91,19 @@ def create_postcard_super_clear(to_name, from_name, message):
     teddy_x = padding + 20
     teddy_y = height // 2 - teddy_img.height // 2
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
+
+    # ---------------- Add user camera image if available ----------------
+    if user_img is not None:
+        # Resize to fit top-right corner
+        max_size = 200
+        ratio = min(max_size / user_img.width, max_size / user_img.height)
+        user_img = user_img.resize(
+            (int(user_img.width * ratio), int(user_img.height * ratio)),
+            Image.LANCZOS
+        )
+        user_x = width - user_img.width - padding
+        user_y = top_y + 80  # below top text
+        base.paste(user_img, (user_x, user_y), user_img)
 
     # ---------------- Fonts for postcard text ----------------
     font_big = load_font("PatrickHand-Regular.ttf", 64)
@@ -174,10 +190,16 @@ if st.button("📨 Send Postcard"):
         st.error("Invalid email address")
     else:
         try:
+            # Convert camera input to PIL Image if available
+            pil_user_img = None
+            if user_photo is not None:
+                pil_user_img = Image.open(user_photo).convert("RGBA")
+
             postcard_image = create_postcard_super_clear(
                 to_name,
                 from_name,
-                message_input
+                message_input,
+                user_img=pil_user_img
             )
 
             st.image(postcard_image)
