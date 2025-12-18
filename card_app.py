@@ -155,8 +155,7 @@ def send_postcard_email(image_bytes, receiver_email):
         "attachments": [{"content": encoded_image, "filename": "postcard.png"}]
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    # For a regular letter (recommended)
-response = requests.post("https://api.pingen.com/v1/documents/letters", headers=headers, files=files, data=data)
+    response = requests.post("https://api.resend.com/emails", headers=headers, json=data)
     if response.status_code != 200:
         raise Exception(f"Resend error {response.status_code}: {response.text}")
 
@@ -175,7 +174,7 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
     pdf = FPDF()
     pdf.add_page()
     pdf.image(tmp_png_path, x=10, y=10, w=190)
-    os.remove(tmp_png_path)  # clean up temp PNG
+    os.remove(tmp_png_path)
 
     # Get PDF as bytes
     pdf_bytes_data = pdf.output(dest='S').encode('latin1')
@@ -193,9 +192,17 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
         "recipient[country]": recipient_address.get("country")
     }
 
-    response = requests.post("https://api.pingen.com/v1/documents", headers=headers, files=files, data=data)
+    # POST to correct Pingen endpoint
+    response = requests.post(
+        "https://api.pingen.com/v1/documents/letters",
+        headers=headers,
+        files=files,
+        data=data
+    )
+
     if response.status_code not in [200, 201]:
         raise Exception(f"Pingen error {response.status_code}: {response.text}")
+
     return response.json()
 
 # ---------------- Step 1: Preview postcard ----------------
