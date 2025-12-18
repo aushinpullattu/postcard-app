@@ -6,9 +6,8 @@ import requests
 import base64
 import textwrap
 import os
-
-# Optional: for PDF conversion
 from fpdf import FPDF
+import tempfile
 
 # ---------------- Page config ----------------
 st.set_page_config(
@@ -32,17 +31,17 @@ header {visibility: hidden;}
 st.title("📮 Send a Postcard")
 
 # ---------------- Inputs ----------------
-to_name = st.text_input("To")
-from_name = st.text_input("From")
-message_input = st.text_area("Message", max_chars=500)
-receiver_email = st.text_input("Recipient Email (for email sending)")
+to_name = st.text_input("To", key="to_name")
+from_name = st.text_input("From", key="from_name")
+message_input = st.text_area("Message", max_chars=500, key="message_input")
+receiver_email = st.text_input("Recipient Email (for email sending)", key="receiver_email")
 
 # Camera input
 user_photo_camera = st.camera_input("Take a photo to include in your postcard")
 
 # Fallback file uploader
 st.markdown("**Or upload a photo if camera fails:**")
-user_photo_upload = st.file_uploader("Upload a photo", type=["png","jpg","jpeg"])
+user_photo_upload = st.file_uploader("Upload a photo", type=["png","jpg","jpeg"], key="photo_upload")
 
 # Decide which photo to use
 user_photo = user_photo_camera if user_photo_camera is not None else user_photo_upload
@@ -106,27 +105,22 @@ def create_postcard(to_name, from_name, message, user_img=None):
     base.paste(teddy_img, (teddy_x, teddy_y), teddy_img)
 
     # Fonts for right-side text
-    font_text = load_font("PatrickHand-Regular.ttf", 56)   # Same font size for labels and user inputs
+    font_text = load_font("PatrickHand-Regular.ttf", 56)
 
     # ---------------- Right side text ----------------
     right_x = int(width * 0.55)
     start_y = int(height * 0.25)
     line_gap = 80
-    input_offset = 10  # spacing between label and user input
+    input_offset = 10
 
-    # Function to draw label and input horizontally aligned
     def draw_label_input(draw_obj, label, input_text, x, y):
         draw_obj.text((x, y), label, fill=ink_brown, font=font_text)
         label_bbox = draw_obj.textbbox((x, y), label, font=font_text)
         draw_obj.text((x + label_bbox[2]-label_bbox[0] + input_offset, y), input_text, fill=ink_brown, font=font_text)
 
-    # From
     draw_label_input(draw, "From:", from_name, right_x, start_y)
-    # To
     draw_label_input(draw, "To:", to_name, right_x, start_y + line_gap)
-    # Message label
     draw.text((right_x, start_y + line_gap*2), "Message:", fill=ink_brown, font=font_text)
-    # Message content
     wrapped_message = textwrap.fill(message, width=22)
     draw.text((right_x + 20, start_y + line_gap*2.8), wrapped_message, fill=ink_brown, font=font_text)
 
@@ -170,16 +164,19 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
     api_key = st.secrets.get("PINGEN_API_KEY")
     if not api_key:
         raise ValueError("PINGEN_API_KEY not found in Streamlit secrets")
-    
-    # Convert PNG to PDF
+
+    # Save PNG to a temporary file for FPDF
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        tmp.write(image_bytes.getvalue())
+        tmp_path = tmp.name
+
     pdf = FPDF()
     pdf.add_page()
-    pdf.image(io.BytesIO(image_bytes.getvalue()), x=10, y=10, w=190)
+    pdf.image(tmp_path, x=10, y=10, w=190)
     pdf_bytes = io.BytesIO()
     pdf.output(pdf_bytes)
     pdf_bytes.seek(0)
-    
-    # Pingen API call
+
     headers = {"Authorization": f"Bearer {api_key}"}
     files = {"file": ("postcard.pdf", pdf_bytes, "application/pdf")}
     data = {
@@ -190,15 +187,15 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
         "recipient[city]": recipient_address.get("city"),
         "recipient[country]": recipient_address.get("country")
     }
-    
+
     response = requests.post("https://api.pingen.com/v1/documents", headers=headers, files=files, data=data)
     if response.status_code not in [200, 201]:
         raise Exception(f"Pingen error {response.status_code}: {response.text}")
     return response.json()
 
 # ---------------- Step 1: Preview postcard ----------------
-if all([to_name, from_name, message_input]):
-    postcard_image = create_postcard(to_name, from_name, message_input, user_img=pil_user_img)
+if all([to_name.strip(), from_name.strip(), message_input.strip()]):
+    postcard_image = create_postcard(to_name.strip(), from_name.strip(), message_input.strip(), user_img=pil_user_img)
     st.subheader("📬 Preview your postcard")
     st.image(postcard_image)
 
@@ -209,48 +206,56 @@ if all([to_name, from_name, message_input]):
 
     # ---------------- Step 2a: Send via Email ----------------
     if st.button("📨 Send Postcard via Email"):
-        if not receiver_email:
+        if not receiver_email.strip():
             st.error("Please enter recipient email")
-        elif not is_valid_email(receiver_email):
+        elif not is_valid_email(receiver_email.strip()):
             st.error("Invalid email address")
         else:
             try:
-                send_postcard_email(img_bytes, receiver_email)
+                send_postcard_email(img_bytes, receiver_email.strip())
                 st.success("Postcard sent successfully via email 💖")
             except Exception as e:
                 st.error(str(e))
 
-   # ---------------- Step 2b: Send via Physical Mail ----------------
-st.markdown("**Send via Physical Mail:**")
+    # ---------------- Step 2b: Send via Physical Mail ----------------
+    st.markdown("**Send via Physical Mail:**")
 
-recipient_name = st.text_input("Recipient Name for Mail", key="recipient_name")
-recipient_line1 = st.text_input("Address Line 1", key="recipient_line1")
-recipient_line2 = st.text_input("Address Line 2 (optional)", key="recipient_line2")
-recipient_city = st.text_input("City", key="recipient_city")
-recipient_zip = st.text_input("ZIP/Postal Code", key="recipient_zip")
-recipient_country = st.text_input("Country", value="UK", key="recipient_country")
+    recipient_name = st.text_input("Recipient Name for Mail", key="recipient_name")
+    recipient_line1 = st.text_input("Address Line 1", key="recipient_line1")
+    recipient_line2 = st.text_input("Address Line 2 (optional)", key="recipient_line2")
+    recipient_city = st.text_input("City", key="recipient_city")
+    recipient_zip = st.text_input("ZIP/Postal Code", key="recipient_zip")
+    recipient_country = st.text_input("Country", value="UK", key="recipient_country")
 
-if st.button("📮 Send Postcard via Mail"):
-    # Strip spaces to avoid empty strings
-    required_fields = [
-        recipient_name.strip(),
-        recipient_line1.strip(),
-        recipient_city.strip(),
-        recipient_zip.strip(),
-        recipient_country.strip()
-    ]
-    if not all(required_fields):
-        st.error("Please fill all required address fields")
-    else:
-        try:
-            recipient_address = {
-                "line1": recipient_line1.strip(),
-                "line2": recipient_line2.strip(),
-                "city": recipient_city.strip(),
-                "zip": recipient_zip.strip(),
-                "country": recipient_country.strip()
-            }
-            result = send_postcard_mail(img_bytes, recipient_name.strip(), recipient_address)
-            st.success(f"Postcard sent via mail! ID: {result.get('id')}")
-        except Exception as e:
-            st.error(str(e))
+    if st.button("📮 Send Postcard via Mail"):
+        # Strip spaces to avoid empty strings
+        required_fields = [
+            recipient_name.strip(),
+            recipient_line1.strip(),
+            recipient_city.strip(),
+            recipient_zip.strip(),
+            recipient_country.strip()
+        ]
+        if not all(required_fields):
+            st.error("Please fill all required address fields")
+        else:
+            try:
+                recipient_address = {
+                    "line1": recipient_line1.strip(),
+                    "line2": recipient_line2.strip(),
+                    "city": recipient_city.strip(),
+                    "zip": recipient_zip.strip(),
+                    "country": recipient_country.strip()
+                }
+                result = send_postcard_mail(img_bytes, recipient_name.strip(), recipient_address)
+                st.success(f"Postcard sent via mail! ID: {result.get('id')}")
+            except Exception as e:
+                st.error(str(e))
+
+    # ---------------- Download ----------------
+    st.download_button(
+        label="💾 Download Postcard",
+        data=img_bytes,
+        file_name="postcard.png",
+        mime="image/png"
+    )
