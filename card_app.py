@@ -155,7 +155,8 @@ def send_postcard_email(image_bytes, receiver_email):
         "attachments": [{"content": encoded_image, "filename": "postcard.png"}]
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    response = requests.post("https://api.resend.com/emails", headers=headers, json=data)
+    # For a regular letter (recommended)
+response = requests.post("https://api.pingen.com/v1/documents/letters", headers=headers, files=files, data=data)
     if response.status_code != 200:
         raise Exception(f"Resend error {response.status_code}: {response.text}")
 
