@@ -165,7 +165,7 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
     if not api_key:
         raise ValueError("PINGEN_API_KEY not found in Streamlit secrets")
 
-    # Save PNG to temporary file for FPDF
+    # Save PNG to temporary file
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png.write(image_bytes.getvalue())
         tmp_png_path = tmp_png.name
@@ -173,12 +173,12 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
     # Convert to PDF
     pdf = FPDF()
     pdf.add_page()
-    pdf.image(tmp_png_path, x=10, y=10, w=190)  # FPDF requires a file path
-    os.remove(tmp_png_path)  # Clean up temp PNG
+    pdf.image(tmp_png_path, x=10, y=10, w=190)
+    os.remove(tmp_png_path)  # clean up temp PNG
 
-    # Save PDF to BytesIO for Pingen upload
-    pdf_bytes = io.BytesIO()
-    pdf.output(pdf_bytes)
+    # Get PDF as bytes
+    pdf_bytes_data = pdf.output(dest='S').encode('latin1')
+    pdf_bytes = io.BytesIO(pdf_bytes_data)
     pdf_bytes.seek(0)
 
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -203,7 +203,7 @@ if all([to_name.strip(), from_name.strip(), message_input.strip()]):
     st.subheader("📬 Preview your postcard")
     st.image(postcard_image)
 
-    # Save postcard to BytesIO for sending/downloading
+    # Save postcard to BytesIO
     img_bytes = io.BytesIO()
     postcard_image.save(img_bytes, format="PNG")
     img_bytes.seek(0)
@@ -232,7 +232,6 @@ if all([to_name.strip(), from_name.strip(), message_input.strip()]):
     recipient_country = st.text_input("Country", value="UK", key="recipient_country")
 
     if st.button("📮 Send Postcard via Mail"):
-        # Strip spaces to avoid empty strings
         required_fields = [
             recipient_name.strip(),
             recipient_line1.strip(),
