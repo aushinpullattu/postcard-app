@@ -165,14 +165,18 @@ def send_postcard_mail(image_bytes, recipient_name, recipient_address):
     if not api_key:
         raise ValueError("PINGEN_API_KEY not found in Streamlit secrets")
 
-    # Save PNG to a temporary file for FPDF
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-        tmp.write(image_bytes.getvalue())
-        tmp_path = tmp.name
+    # Save PNG to temporary file for FPDF
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
+        tmp_png.write(image_bytes.getvalue())
+        tmp_png_path = tmp_png.name
 
+    # Convert to PDF
     pdf = FPDF()
     pdf.add_page()
-    pdf.image(tmp_path, x=10, y=10, w=190)
+    pdf.image(tmp_png_path, x=10, y=10, w=190)  # FPDF requires a file path
+    os.remove(tmp_png_path)  # Clean up temp PNG
+
+    # Save PDF to BytesIO for Pingen upload
     pdf_bytes = io.BytesIO()
     pdf.output(pdf_bytes)
     pdf_bytes.seek(0)
