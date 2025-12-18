@@ -220,36 +220,37 @@ if all([to_name, from_name, message_input]):
             except Exception as e:
                 st.error(str(e))
 
-    # ---------------- Step 2b: Send via Physical Mail ----------------
-    st.markdown("**Send via Physical Mail:**")
-    recipient_name = st.text_input("Recipient Name for Mail")
-    recipient_line1 = st.text_input("Address Line 1")
-    recipient_line2 = st.text_input("Address Line 2 (optional)")
-    recipient_city = st.text_input("City")
-    recipient_zip = st.text_input("ZIP/Postal Code")
-    recipient_country = st.text_input("Country", value="UK")
+   # ---------------- Step 2b: Send via Physical Mail ----------------
+st.markdown("**Send via Physical Mail:**")
 
-    if st.button("📮 Send Postcard via Mail"):
-        if not all([recipient_name, recipient_line1, recipient_city, recipient_zip, recipient_country]):
-            st.error("Please fill all required address fields")
-        else:
-            try:
-                recipient_address = {
-                    "line1": recipient_line1,
-                    "line2": recipient_line2,
-                    "city": recipient_city,
-                    "zip": recipient_zip,
-                    "country": recipient_country
-                }
-                result = send_postcard_mail(img_bytes, recipient_name, recipient_address)
-                st.success(f"Postcard sent via mail! ID: {result.get('id')}")
-            except Exception as e:
-                st.error(str(e))
+recipient_name = st.text_input("Recipient Name for Mail", key="recipient_name")
+recipient_line1 = st.text_input("Address Line 1", key="recipient_line1")
+recipient_line2 = st.text_input("Address Line 2 (optional)", key="recipient_line2")
+recipient_city = st.text_input("City", key="recipient_city")
+recipient_zip = st.text_input("ZIP/Postal Code", key="recipient_zip")
+recipient_country = st.text_input("Country", value="UK", key="recipient_country")
 
-    # ---------------- Download ----------------
-    st.download_button(
-        label="💾 Download Postcard",
-        data=img_bytes,
-        file_name="postcard.png",
-        mime="image/png"
-    )
+if st.button("📮 Send Postcard via Mail"):
+    # Strip spaces to avoid empty strings
+    required_fields = [
+        recipient_name.strip(),
+        recipient_line1.strip(),
+        recipient_city.strip(),
+        recipient_zip.strip(),
+        recipient_country.strip()
+    ]
+    if not all(required_fields):
+        st.error("Please fill all required address fields")
+    else:
+        try:
+            recipient_address = {
+                "line1": recipient_line1.strip(),
+                "line2": recipient_line2.strip(),
+                "city": recipient_city.strip(),
+                "zip": recipient_zip.strip(),
+                "country": recipient_country.strip()
+            }
+            result = send_postcard_mail(img_bytes, recipient_name.strip(), recipient_address)
+            st.success(f"Postcard sent via mail! ID: {result.get('id')}")
+        except Exception as e:
+            st.error(str(e))
