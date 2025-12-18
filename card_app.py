@@ -7,6 +7,9 @@ import base64
 import textwrap
 import os
 
+# Optional: for PDF conversion
+from fpdf import FPDF
+
 # ---------------- Page config ----------------
 st.set_page_config(
     page_title="Send a Postcard 💌",
@@ -32,7 +35,7 @@ st.title("📮 Send a Postcard")
 to_name = st.text_input("To")
 from_name = st.text_input("From")
 message_input = st.text_area("Message", max_chars=500)
-receiver_email = st.text_input("Recipient Email")
+receiver_email = st.text_input("Recipient Email (for email sending)")
 
 # Camera input
 user_photo_camera = st.camera_input("Take a photo to include in your postcard")
@@ -162,6 +165,37 @@ def send_postcard_email(image_bytes, receiver_email):
     if response.status_code != 200:
         raise Exception(f"Resend error {response.status_code}: {response.text}")
 
+# ---------------- Pingen Mail Sender ----------------
+def send_postcard_mail(image_bytes, recipient_name, recipient_address):
+    api_key = st.secrets.get("PINGEN_API_KEY")
+    if not api_key:
+        raise ValueError("PINGEN_API_KEY not found in Streamlit secrets")
+    
+    # Convert PNG to PDF
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.image(io.BytesIO(image_bytes.getvalue()), x=10, y=10, w=190)
+    pdf_bytes = io.BytesIO()
+    pdf.output(pdf_bytes)
+    pdf_bytes.seek(0)
+    
+    # Pingen API call
+    headers = {"Authorization": f"Bearer {api_key}"}
+    files = {"file": ("postcard.pdf", pdf_bytes, "application/pdf")}
+    data = {
+        "recipient[name]": recipient_name,
+        "recipient[address_line1]": recipient_address.get("line1"),
+        "recipient[address_line2]": recipient_address.get("line2", ""),
+        "recipient[zip]": recipient_address.get("zip"),
+        "recipient[city]": recipient_address.get("city"),
+        "recipient[country]": recipient_address.get("country")
+    }
+    
+    response = requests.post("https://api.pingen.com/v1/documents", headers=headers, files=files, data=data)
+    if response.status_code not in [200, 201]:
+        raise Exception(f"Pingen error {response.status_code}: {response.text}")
+    return response.json()
+
 # ---------------- Step 1: Preview postcard ----------------
 if all([to_name, from_name, message_input]):
     postcard_image = create_postcard(to_name, from_name, message_input, user_img=pil_user_img)
@@ -173,8 +207,8 @@ if all([to_name, from_name, message_input]):
     postcard_image.save(img_bytes, format="PNG")
     img_bytes.seek(0)
 
-    # ---------------- Step 2: Send & Download ----------------
-    if st.button("📨 Send Postcard"):
+    # ---------------- Step 2a: Send via Email ----------------
+    if st.button("📨 Send Postcard via Email"):
         if not receiver_email:
             st.error("Please enter recipient email")
         elif not is_valid_email(receiver_email):
@@ -182,12 +216,40 @@ if all([to_name, from_name, message_input]):
         else:
             try:
                 send_postcard_email(img_bytes, receiver_email)
-                st.success("Postcard sent successfully 💖")
-                st.download_button(
-                    label="💾 Download Postcard",
-                    data=img_bytes,
-                    file_name="postcard.png",
-                    mime="image/png"
-                )
+                st.success("Postcard sent successfully via email 💖")
             except Exception as e:
                 st.error(str(e))
+
+    # ---------------- Step 2b: Send via Physical Mail ----------------
+    st.markdown("**Send via Physical Mail:**")
+    recipient_name = st.text_input("Recipient Name for Mail")
+    recipient_line1 = st.text_input("Address Line 1")
+    recipient_line2 = st.text_input("Address Line 2 (optional)")
+    recipient_city = st.text_input("City")
+    recipient_zip = st.text_input("ZIP/Postal Code")
+    recipient_country = st.text_input("Country", value="UK")
+
+    if st.button("📮 Send Postcard via Mail"):
+        if not all([recipient_name, recipient_line1, recipient_city, recipient_zip, recipient_country]):
+            st.error("Please fill all required address fields")
+        else:
+            try:
+                recipient_address = {
+                    "line1": recipient_line1,
+                    "line2": recipient_line2,
+                    "city": recipient_city,
+                    "zip": recipient_zip,
+                    "country": recipient_country
+                }
+                result = send_postcard_mail(img_bytes, recipient_name, recipient_address)
+                st.success(f"Postcard sent via mail! ID: {result.get('id')}")
+            except Exception as e:
+                st.error(str(e))
+
+    # ---------------- Download ----------------
+    st.download_button(
+        label="💾 Download Postcard",
+        data=img_bytes,
+        file_name="postcard.png",
+        mime="image/png"
+    )
